@@ -10,7 +10,8 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
   const [lightColor, setLightColor] = useState('#ffffff');
   const [size, setSize] = useState(initialSize);
 
-  // Logo Customization States
+  // Logo & Target Customization States
+  const [targetMode, setTargetMode] = useState('direct'); // 'direct' | 'short'
   const [logoSrc, setLogoSrc] = useState(null);
   const [logoScale, setLogoScale] = useState(0.20);
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -20,8 +21,8 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
   const cacheRef = useRef(new Map());
 
   const cacheKey = useMemo(() => {
-    return `${shortCode}_${size}_${darkColor}_${lightColor}`;
-  }, [shortCode, size, darkColor, lightColor]);
+    return `${shortCode}_${size}_${darkColor}_${lightColor}_${targetMode}`;
+  }, [shortCode, size, darkColor, lightColor, targetMode]);
 
   const fetchQRData = async (forceRefresh = false) => {
     if (!shortCode) {
@@ -44,6 +45,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
         size,
         darkColor,
         lightColor,
+        targetMode,
         errorCorrection: 'H',
       });
 
@@ -214,6 +216,31 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
   return (
     <div className="card" style={{ maxWidth: '580px', width: '100%', margin: '0 auto' }}>
       
+      {/* Target Encoding Mode Selector */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
+          QR Code Scan Target:
+        </label>
+        <div className="mode-tabs" style={{ marginBottom: 0 }}>
+          <button
+            type="button"
+            className={`tab-btn ${targetMode === 'direct' ? 'active' : ''}`}
+            onClick={() => setTargetMode('direct')}
+            title="Encodes destination URL directly — Guaranteed to scan 100% reliably on phone cameras"
+          >
+            🎯 Direct Target URL (Phone Camera Safe)
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${targetMode === 'short' ? 'active' : ''}`}
+            onClick={() => setTargetMode('short')}
+            title="Encodes short link redirect URL"
+          >
+            🔗 Short Link Redirect
+          </button>
+        </div>
+      </div>
+
       {/* Basic Controls */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -425,33 +452,35 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
             marginBottom: '20px',
             fontSize: '0.8rem',
             color: 'var(--text-secondary)',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '8px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
           }}
         >
           <div>
-            <strong style={{ color: 'var(--text-primary)' }}>Short URL: </strong>
-            <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{qrData.shortUrl}</span>
+            <strong style={{ color: 'var(--text-primary)' }}>📱 Encoded Scan Target: </strong>
+            <span style={{ fontFamily: 'monospace', color: '#22c55e', fontWeight: 600, wordBreak: 'break-all' }}>
+              {qrData.encodedUrl}
+            </span>
           </div>
 
-          {qrData.customAlias && (
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <div>
-              <strong style={{ color: 'var(--text-primary)' }}>Custom Alias: </strong>
-              <span style={{ fontFamily: 'monospace' }}>/{qrData.customAlias}</span>
+              <strong style={{ color: 'var(--text-primary)' }}>Short URL: </strong>
+              <span style={{ fontFamily: 'monospace' }}>{qrData.shortUrl}</span>
             </div>
-          )}
 
-          {qrData.createdAt && (
+            {qrData.customAlias && (
+              <div>
+                <strong style={{ color: 'var(--text-primary)' }}>Custom Alias: </strong>
+                <span style={{ fontFamily: 'monospace' }}>/{qrData.customAlias}</span>
+              </div>
+            )}
+
             <div>
-              <strong style={{ color: 'var(--text-primary)' }}>Created: </strong>
-              <span>{formatDate(qrData.createdAt)}</span>
+              <strong style={{ color: 'var(--text-primary)' }}>Resolution: </strong>
+              <span>{qrData.size || size} × {qrData.size || size} px (ECC Level H)</span>
             </div>
-          )}
-
-          <div>
-            <strong style={{ color: 'var(--text-primary)' }}>Resolution: </strong>
-            <span>{qrData.size || size} × {qrData.size || size} px (ECC Level H)</span>
           </div>
         </div>
       )}

@@ -84,7 +84,10 @@ const api = {
     if (options.format) params.set('format', options.format);
     if (options.darkColor) params.set('darkColor', options.darkColor);
     if (options.lightColor) params.set('lightColor', options.lightColor);
-    params.set('clientUrl', window.location.origin);
+    if (options.targetMode) params.set('targetMode', options.targetMode);
+    
+    const customDomain = localStorage.getItem('sniplink_custom_domain');
+    params.set('clientUrl', customDomain || window.location.origin);
     return `${API_BASE}/qr/${shortCode}?${params.toString()}`;
   },
 
@@ -93,14 +96,17 @@ const api = {
     if (options.size) params.set('size', options.size);
     if (options.darkColor) params.set('darkColor', options.darkColor);
     if (options.lightColor) params.set('lightColor', options.lightColor);
-    params.set('clientUrl', window.location.origin);
+    if (options.targetMode) params.set('targetMode', options.targetMode);
+    
+    const customDomain = localStorage.getItem('sniplink_custom_domain');
+    params.set('clientUrl', customDomain || window.location.origin);
 
     const res = await fetch(`${API_BASE}/qr/${shortCode}/data?${params.toString()}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     
-    // Ensure the returned shortUrl is localized to the frontend domain
-    data.shortUrl = formatShortUrl(shortCode);
+    // Ensure the returned shortUrl is localized to the frontend domain or custom domain
+    data.shortUrl = customDomain ? `${customDomain}/${shortCode}` : formatShortUrl(shortCode);
     return data;
   },
 

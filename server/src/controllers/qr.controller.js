@@ -14,6 +14,7 @@ export async function generateQR(req, res) {
       darkColor = '#000000',
       lightColor = '#ffffff',
       errorCorrection = 'H',
+      targetMode = 'direct',
       clientUrl
     } = req.query;
 
@@ -25,6 +26,8 @@ export async function generateQR(req, res) {
 
     const baseUrl = clientUrl || config.clientUrl;
     const shortUrl = `${baseUrl}/${shortCode}`;
+    const encodedUrl = targetMode === 'short' ? shortUrl : url.original_url;
+
     const qrOptions = {
       width: Math.min(Math.max(parseInt(size) || 300, 100), 1000),
       margin: 4,
@@ -36,11 +39,11 @@ export async function generateQR(req, res) {
     };
 
     if (format === 'svg') {
-      const svg = await QRCode.toString(shortUrl, { ...qrOptions, type: 'svg' });
+      const svg = await QRCode.toString(encodedUrl, { ...qrOptions, type: 'svg' });
       res.setHeader('Content-Type', 'image/svg+xml');
       res.send(svg);
     } else {
-      const buffer = await QRCode.toBuffer(shortUrl, qrOptions);
+      const buffer = await QRCode.toBuffer(encodedUrl, qrOptions);
       res.setHeader('Content-Type', 'image/png');
       res.send(buffer);
     }
@@ -61,6 +64,7 @@ export async function getQRDataUrl(req, res) {
       darkColor = '#000000',
       lightColor = '#ffffff',
       errorCorrection = 'H',
+      targetMode = 'direct',
       clientUrl
     } = req.query;
 
@@ -72,8 +76,10 @@ export async function getQRDataUrl(req, res) {
 
     const baseUrl = clientUrl || config.clientUrl;
     const shortUrl = `${baseUrl}/${shortCode}`;
+    const encodedUrl = targetMode === 'short' ? shortUrl : url.original_url;
+
     const qrSize = Math.min(Math.max(parseInt(size) || 300, 100), 1000);
-    const dataUrl = await QRCode.toDataURL(shortUrl, {
+    const dataUrl = await QRCode.toDataURL(encodedUrl, {
       width: qrSize,
       margin: 4,
       errorCorrectionLevel: errorCorrection,
@@ -85,8 +91,11 @@ export async function getQRDataUrl(req, res) {
 
     res.json({
       qrCode: dataUrl,
+      encodedUrl,
       shortUrl,
+      originalUrl: url.original_url,
       shortCode,
+      targetMode,
       createdAt: url.created_at,
       customAlias: url.custom_alias ? url.short_code : null,
       size: qrSize,
