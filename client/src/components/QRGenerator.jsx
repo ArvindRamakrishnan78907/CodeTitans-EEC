@@ -66,7 +66,10 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
   };
 
   useEffect(() => {
-    fetchQRData();
+    const timer = setTimeout(() => {
+      fetchQRData();
+    }, 150);
+    return () => clearTimeout(timer);
   }, [cacheKey]);
 
   // Client-side HTML5 Canvas Composite Engine for Center Logo Overlay
@@ -287,6 +290,41 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
               />
               <span style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{lightColor}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Color Palette Swatches */}
+        <div style={{ marginTop: '12px', marginBottom: '8px' }}>
+          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+            Quick Color Swatches:
+          </label>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Black', hex: '#000000' },
+              { label: 'Indigo', hex: '#6366f1' },
+              { label: 'Emerald', hex: '#10b981' },
+              { label: 'Cyan', hex: '#06b6d4' },
+              { label: 'Amber', hex: '#f59e0b' },
+              { label: 'Rose', hex: '#f43f5e' },
+              { label: 'Purple', hex: '#8b5cf6' },
+              { label: 'Slate', hex: '#1e293b' }
+            ].map(swatch => (
+              <button
+                key={swatch.hex}
+                type="button"
+                onClick={() => setDarkColor(swatch.hex)}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  backgroundColor: swatch.hex,
+                  border: darkColor === swatch.hex ? '2px solid var(--accent-primary)' : '1px solid var(--border-default)',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+                title={`Set foreground to ${swatch.label}`}
+              />
+            ))}
           </div>
         </div>
 
