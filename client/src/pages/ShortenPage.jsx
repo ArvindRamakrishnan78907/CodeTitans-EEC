@@ -19,9 +19,10 @@ export default function ShortenPage({ addToast }) {
   const [utmMedium, setUtmMedium] = useState('');
   const [utmCampaign, setUtmCampaign] = useState('');
   const [useUtm, setUseUtm] = useState(false);
-  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const [aliasStatus, setAliasStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
-  const [aliasMessage, setAliasMessage] = useState('');
+  const [mode, setMode] = useState('single'); // 'single' | 'bulk'
+  const [bulkUrlsText, setBulkUrlsText] = useState('');
+  const [bulkResults, setBulkResults] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
@@ -70,6 +71,12 @@ export default function ShortenPage({ addToast }) {
     return () => clearTimeout(timer);
   }, [customAlias, useCustomAlias]);
 
+  const ensureProtocol = (u) => {
+    const trimmed = u.trim();
+    if (!trimmed) return '';
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  };
+
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,10 +93,10 @@ export default function ShortenPage({ addToast }) {
         isoExpiry = new Date(expiresAt).toISOString();
       }
 
-      let finalUrl = url.trim();
+      let finalUrl = ensureProtocol(url);
       if (utmSource || utmMedium || utmCampaign) {
         try {
-          const urlObj = new URL(finalUrl.includes('://') ? finalUrl : `http://${finalUrl}`);
+          const urlObj = new URL(finalUrl);
           if (utmSource) urlObj.searchParams.set('utm_source', utmSource.trim());
           if (utmMedium) urlObj.searchParams.set('utm_medium', utmMedium.trim());
           if (utmCampaign) urlObj.searchParams.set('utm_campaign', utmCampaign.trim());
@@ -127,11 +134,46 @@ export default function ShortenPage({ addToast }) {
       setUtmCampaign('');
       setIsAdvancedOpen(false);
       loadHistory();
-    } catch (error) {
-      addToast(error.message, 'error');
-    } finally {
-      setLoading(false);
+  // Handle bulk submit
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    const rawLines = bulkUrlsText.split('\n').map(l => l.trim()).filter(Boolean);
+    if (rawLines.length === 0) {
+      addToast('Please enter at least one URL', 'error');
+      return;
     }
+
+    if (rawLines.length > 10) {
+      addToast('Maximum 10 URLs per batch', 'error');
+      return;
+    }
+
+    setBulkLoading(true);
+    setBulkResults([]);
+
+    try {
+      const promises = rawLines.map(async (rawUrl) => {
+        const fullUrl = ensureProtocol(rawUrl);
+        return await api.shortenUrl(fullUrl);
+      });
+
+      const results = await Promise.all(promises);
+      setBulkResults(results);
+      addToast(`Successfully shortened ${results.length} URLs! 🚀`, 'success');
+      setBulkUrlsText('');
+      loadHistory();
+    } catch (err) {
+      addToast(err.message || 'Error processing bulk URLs', 'error');
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleCopyAllBulk = () => {
+    if (bulkResults.length === 0) return;
+    const allLinks = bulkResults.map(r => r.shortUrl).join('\n');
+    copy(allLinks);
+    addToast('Copied all short links to clipboard! 📋', 'success');
   };
 
   const handleCopy = (text) => {
@@ -166,36 +208,62 @@ export default function ShortenPage({ addToast }) {
         <p>Transform long URLs into short, shareable links instantly</p>
       </div>
 
-      {/* Main Shortening Form */}
-      <form onSubmit={handleSubmit} className="card card-gradient" style={{ marginBottom: 'var(--space-xl)' }}>
-        <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
-          <label htmlFor="url-input">Paste your long URL</label>
-          <div className="input-with-btn">
-            <input
-              id="url-input"
-              type="url"
-              className="input input-lg"
-              placeholder="https://example.com/very/long/url/that/needs/shortening..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              autoFocus
-            />
-            <button
-              type="submit"
-              className="btn btn-primary btn-lg"
-              disabled={loading || (useCustomAlias && aliasStatus === 'taken')}
-            >
-              {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⭘</span>
-                  Shortening...
+      {/* Mode Switcher Tabs */}
+      <div className="mode-tabs" style={{ maxWidth: '400px' }}>
+        <button
+          type="button"
+          className={`tab-btn ${mode === 'single' ? 'active' : ''}`}
+          onClick={() => setMode('single')}
+        >
+          🔗 Single Link
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === 'bulk' ? 'active' : ''}`}
+          onClick={() => setMode('bulk')}
+        >
+          📦 Bulk Mode (Batch)
+        </button>
+      </div>
+
+      {/* Single URL Form */}
+      {mode === 'single' ? (
+        <form onSubmit={handleSubmit} className="card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
+            <div className="flex items-center justify-between">
+              <label htmlFor="url-input">Paste your long URL</label>
+              {url.trim() && (
+                <span className="health-badge health-badge-ok">
+                  🟢 Auto-HTTP Enabled
                 </span>
-              ) : (
-                'Shorten'
               )}
-            </button>
+            </div>
+            <div className="input-with-btn">
+              <input
+                id="url-input"
+                type="text"
+                className="input input-lg"
+                placeholder="example.com or https://your-long-link..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="btn btn-primary btn-lg"
+                disabled={loading || (useCustomAlias && aliasStatus === 'taken')}
+              >
+                {loading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⭘</span>
+                    Shortening...
+                  </span>
+                ) : (
+                  'Shorten'
+                )}
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Advanced Options Accordion */}
         <div 
@@ -408,6 +476,57 @@ export default function ShortenPage({ addToast }) {
                 <img src={qrData} alt="QR Code" style={{ width: '120px', height: '120px' }} />
               </div>
             )}
+          </div>
+        </div>
+      ) : (
+        /* Bulk Mode Form */
+        <form onSubmit={handleBulkSubmit} className="card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
+            <label>Paste Multiple URLs (One per line, max 10)</label>
+            <textarea
+              className="input"
+              rows={6}
+              placeholder={`https://github.com\nhttps://google.com\nexample.com/news`}
+              value={bulkUrlsText}
+              onChange={(e) => setBulkUrlsText(e.target.value)}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg"
+            disabled={bulkLoading || !bulkUrlsText.trim()}
+            style={{ width: '100%' }}
+          >
+            {bulkLoading ? 'Processing Batch...' : '🚀 Shorten All Links'}
+          </button>
+        </form>
+      )}
+
+      {/* Bulk Results Card */}
+      {bulkResults.length > 0 && (
+        <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>📦 Batch Shorten Results ({bulkResults.length})</h3>
+            <button className="btn btn-primary btn-sm" onClick={handleCopyAllBulk}>
+              📋 Copy All Short Links
+            </button>
+          </div>
+          <div className="url-list">
+            {bulkResults.map(res => (
+              <div key={res.shortCode} className="url-item-card">
+                <div className="url-item-row">
+                  <span className="short-pill" onClick={() => handleCopy(res.shortUrl)}>
+                    /{res.shortCode}
+                  </span>
+                  <button className="action-btn" onClick={() => handleCopy(res.shortUrl)}>
+                    📋 Copy
+                  </button>
+                </div>
+                <div className="url-item-original">🔗 {res.originalUrl}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}
