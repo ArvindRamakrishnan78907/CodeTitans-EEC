@@ -3,7 +3,7 @@ import config from '../config/index.js';
 import { queryOne } from '../models/db.js';
 
 /**
- * Generate QR code for a short URL
+ * Generate QR code image (PNG/SVG) for a short URL
  */
 export async function generateQR(req, res) {
   try {
@@ -13,10 +13,10 @@ export async function generateQR(req, res) {
       format = 'png',
       darkColor = '#000000',
       lightColor = '#ffffff',
-      errorCorrection = 'M'
+      errorCorrection = 'H'
     } = req.query;
 
-    const url = queryOne('SELECT id FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
+    const url = queryOne('SELECT id, short_code, original_url, custom_alias, created_at FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
 
     if (!url) {
       return res.status(404).json({ error: 'URL not found' });
@@ -24,8 +24,8 @@ export async function generateQR(req, res) {
 
     const shortUrl = `${config.clientUrl}/${shortCode}`;
     const qrOptions = {
-      width: parseInt(size),
-      margin: 2,
+      width: Math.min(Math.max(parseInt(size) || 300, 100), 1000),
+      margin: 4,
       errorCorrectionLevel: errorCorrection,
       color: {
         dark: darkColor,
@@ -49,7 +49,7 @@ export async function generateQR(req, res) {
 }
 
 /**
- * Get QR code as data URL (base64)
+ * Get QR code as data URL (base64) with metadata
  */
 export async function getQRDataUrl(req, res) {
   try {
@@ -57,26 +57,38 @@ export async function getQRDataUrl(req, res) {
     const {
       size = 300,
       darkColor = '#000000',
-      lightColor = '#ffffff'
+      lightColor = '#ffffff',
+      errorCorrection = 'H'
     } = req.query;
 
-    const url = queryOne('SELECT id FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
+    const url = queryOne('SELECT id, short_code, original_url, custom_alias, created_at FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
 
     if (!url) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
     const shortUrl = `${config.clientUrl}/${shortCode}`;
+    const qrSize = Math.min(Math.max(parseInt(size) || 300, 100), 1000);
+
     const dataUrl = await QRCode.toDataURL(shortUrl, {
-      width: parseInt(size),
-      margin: 2,
+      width: qrSize,
+      margin: 4,
+      errorCorrectionLevel: errorCorrection,
       color: {
         dark: darkColor,
         light: lightColor
       }
     });
 
-    res.json({ qrCode: dataUrl, shortUrl });
+    res.json({
+      qrCode: dataUrl,
+      shortUrl,
+      shortCode,
+      createdAt: url.created_at,
+      customAlias: url.custom_alias ? url.short_code : null,
+      size: qrSize,
+      errorCorrection: 'H'
+    });
   } catch (error) {
     console.error('Error generating QR data URL:', error);
     res.status(500).json({ error: 'Failed to generate QR code' });
