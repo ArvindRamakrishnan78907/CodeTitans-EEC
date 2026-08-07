@@ -8,7 +8,7 @@ import SettingsPage from './pages/SettingsPage.jsx';
 import RedirectHandler from './pages/RedirectHandler.jsx';
 import './index.css';
 
-function DashboardLayout({ theme, handleThemeChange, addToast }) {
+function DashboardLayout({ children }) {
   return (
     <div className="app-layout">
       {/* Sidebar */}
@@ -74,12 +74,7 @@ function DashboardLayout({ theme, handleThemeChange, addToast }) {
 
       {/* Main Content */}
       <main className="main-content">
-        <Routes>
-          <Route path="/" element={<ShortenPage addToast={addToast} />} />
-          <Route path="/qr" element={<QRPage addToast={addToast} />} />
-          <Route path="/analytics" element={<AnalyticsPage addToast={addToast} />} />
-          <Route path="/settings" element={<SettingsPage currentTheme={theme} onThemeChange={handleThemeChange} addToast={addToast} />} />
-        </Routes>
+        {children}
       </main>
     </div>
   );
@@ -102,8 +97,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Explicit Static App Routes (Prioritized over dynamic :shortCode) */}
+        <Route path="/" element={<DashboardLayout><ShortenPage addToast={addToast} /></DashboardLayout>} />
+        <Route path="/qr" element={<DashboardLayout><QRPage addToast={addToast} /></DashboardLayout>} />
+        <Route path="/analytics" element={<DashboardLayout><AnalyticsPage addToast={addToast} /></DashboardLayout>} />
+        <Route path="/settings" element={<DashboardLayout><SettingsPage currentTheme={theme} onThemeChange={handleThemeChange} addToast={addToast} /></DashboardLayout>} />
+
+        {/* Dynamic short code route */}
         <Route path="/:shortCode" element={<RedirectHandler />} />
-        <Route path="/*" element={<DashboardLayout theme={theme} handleThemeChange={handleThemeChange} addToast={addToast} />} />
       </Routes>
 
       {/* Toast Notifications */}

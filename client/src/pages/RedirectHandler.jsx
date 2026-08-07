@@ -13,7 +13,7 @@ export default function RedirectHandler() {
 
   useEffect(() => {
     async function checkUrl() {
-      if (!shortCode) return;
+      if (!shortCode || ['qr', 'analytics', 'settings', 'api'].includes(shortCode.toLowerCase())) return;
       try {
         const data = await api.getUrl(shortCode);
         if (data.isPasswordProtected) {
