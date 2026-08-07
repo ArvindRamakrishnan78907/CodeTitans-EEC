@@ -49,7 +49,7 @@ export default function RedirectHandler() {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', animation: 'spin 1s linear infinite' }}>⚡</div>
+          <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>⭘</div>
           <h2 style={{ marginTop: '1rem' }}>Redirecting...</h2>
         </div>
         <style>
@@ -69,7 +69,6 @@ export default function RedirectHandler() {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <form onSubmit={handlePasswordSubmit} className="card card-gradient" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔒</div>
           <h2>Protected Link</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>This link requires a password to access.</p>
           
@@ -82,7 +81,7 @@ export default function RedirectHandler() {
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
             />
-            {error && <span className="error-text" style={{ marginTop: '0.5rem' }}>❌ {error}</span>}
+            {error && <span className="error-text" style={{ marginTop: '0.5rem' }}>{error}</span>}
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={verifying || !password}>
@@ -96,8 +95,7 @@ export default function RedirectHandler() {
   // Fallback error state if not loading and not needing password (e.g. 404)
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center', border: '1px solid var(--error)' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
+      <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center', border: '1px solid var(--accent-error)' }}>
         <h2>{error || 'Link Unavailable'}</h2>
         <button onClick={() => navigate('/')} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
           Go to Homepage

@@ -84,7 +84,7 @@ export default function ShortenPage({ addToast }) {
         // QR generation failed silently
       }
 
-      addToast('URL shortened successfully! 🎉', 'success');
+      addToast('URL shortened successfully', 'success');
       setUrl('');
       setCustomAlias('');
       setPassword('');
@@ -98,7 +98,7 @@ export default function ShortenPage({ addToast }) {
 
   const handleCopy = (text) => {
     copy(text);
-    addToast('Copied to clipboard! 📋', 'success');
+    addToast('Copied to clipboard', 'success');
   };
 
   const handleDelete = async (shortCode) => {
@@ -124,7 +124,7 @@ export default function ShortenPage({ addToast }) {
   return (
     <div>
       <div className="page-header">
-        <h2>🔗 Shorten URL</h2>
+        <h2>Shorten URL</h2>
         <p>Transform long URLs into short, shareable links instantly</p>
       </div>
 
@@ -149,11 +149,11 @@ export default function ShortenPage({ addToast }) {
             >
               {loading ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚡</span>
+                  <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⭘</span>
                   Shortening...
                 </span>
               ) : (
-                '⚡ Shorten'
+                'Shorten'
               )}
             </button>
           </div>
@@ -215,9 +215,9 @@ export default function ShortenPage({ addToast }) {
                   onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   maxLength={30}
                 />
-                {aliasStatus === 'checking' && <span className="helper-text">⏳ Checking availability...</span>}
-                {aliasStatus === 'available' && <span className="success-text">✅ {aliasMessage}</span>}
-                {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">❌ {aliasMessage}</span>}
+                {aliasStatus === 'checking' && <span className="helper-text">Checking availability...</span>}
+                {aliasStatus === 'available' && <span className="success-text">{aliasMessage}</span>}
+                {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">{aliasMessage}</span>}
                 {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
                   <span className="helper-text">Minimum 3 characters</span>
                 )}

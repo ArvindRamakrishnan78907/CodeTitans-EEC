@@ -13,7 +13,8 @@ export async function generateQR(req, res) {
       format = 'png',
       darkColor = '#000000',
       lightColor = '#ffffff',
-      errorCorrection = 'H'
+      errorCorrection = 'H',
+      clientUrl
     } = req.query;
 
     const url = queryOne('SELECT id, short_code, original_url, custom_alias, created_at FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
@@ -22,7 +23,8 @@ export async function generateQR(req, res) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    const shortUrl = `${config.clientUrl}/${shortCode}`;
+    const baseUrl = clientUrl || config.clientUrl;
+    const shortUrl = `${baseUrl}/${shortCode}`;
     const qrOptions = {
       width: Math.min(Math.max(parseInt(size) || 300, 100), 1000),
       margin: 4,
@@ -58,7 +60,8 @@ export async function getQRDataUrl(req, res) {
       size = 300,
       darkColor = '#000000',
       lightColor = '#ffffff',
-      errorCorrection = 'H'
+      errorCorrection = 'H',
+      clientUrl
     } = req.query;
 
     const url = queryOne('SELECT id, short_code, original_url, custom_alias, created_at FROM urls WHERE short_code = ? AND is_active = 1', [shortCode]);
@@ -67,9 +70,9 @@ export async function getQRDataUrl(req, res) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    const shortUrl = `${config.clientUrl}/${shortCode}`;
+    const baseUrl = clientUrl || config.clientUrl;
+    const shortUrl = `${baseUrl}/${shortCode}`;
     const qrSize = Math.min(Math.max(parseInt(size) || 300, 100), 1000);
-
     const dataUrl = await QRCode.toDataURL(shortUrl, {
       width: qrSize,
       margin: 4,

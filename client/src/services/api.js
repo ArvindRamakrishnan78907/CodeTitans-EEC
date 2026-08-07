@@ -82,6 +82,7 @@ const api = {
     if (options.format) params.set('format', options.format);
     if (options.darkColor) params.set('darkColor', options.darkColor);
     if (options.lightColor) params.set('lightColor', options.lightColor);
+    params.set('clientUrl', window.location.origin);
     return `${API_BASE}/qr/${shortCode}?${params.toString()}`;
   },
 
@@ -90,6 +91,7 @@ const api = {
     if (options.size) params.set('size', options.size);
     if (options.darkColor) params.set('darkColor', options.darkColor);
     if (options.lightColor) params.set('lightColor', options.lightColor);
+    params.set('clientUrl', window.location.origin);
 
     const res = await fetch(`${API_BASE}/qr/${shortCode}/data?${params.toString()}`);
     const data = await res.json();
