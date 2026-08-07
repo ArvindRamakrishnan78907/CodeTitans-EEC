@@ -146,6 +146,13 @@ export default function ShortenPage({ addToast }) {
       setUtmCampaign('');
       setIsAdvancedOpen(false);
       loadHistory();
+    } catch (error) {
+      addToast(error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle bulk submit
   const handleBulkSubmit = async (e) => {
     e.preventDefault();
