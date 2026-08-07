@@ -126,7 +126,7 @@ body[data-theme="light"] {
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background: rgba(10, 10, 10, 0.4);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-right: 1px solid var(--border-default);
@@ -240,7 +240,7 @@ body[data-theme="light"] {
 .input {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -248,6 +248,11 @@ body[data-theme="light"] {
   font-size: 0.95rem;
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+select.input option {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .input:focus {
