@@ -74,7 +74,13 @@ export default function AnalyticsPage({ addToast }) {
   const loadUrls = async () => {
     try {
       const data = await api.getAllUrls(1, 50);
-      setUrls(data.urls || []);
+      const list = data.urls || [];
+      setUrls(list);
+      // Auto-select first link if none selected
+      if (!shortCode && list.length > 0) {
+        setShortCode(list[0].short_code);
+        loadAnalytics(list[0].short_code, '7d');
+      }
     } catch (e) {
       console.error('URL list load error:', e);
     }
@@ -135,19 +141,18 @@ export default function AnalyticsPage({ addToast }) {
           const { ctx, chartArea } = chart;
           if (!chartArea) return 'rgba(99, 102, 241, 0.15)';
           const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, 'rgba(99, 102, 241, 0.45)');
+          gradient.addColorStop(0, 'rgba(99, 102, 241, 0.35)');
           gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
           return gradient;
         },
-        borderWidth: 2.5,
+        borderWidth: 2,
         pointBackgroundColor: '#6366f1',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 7,
-        pointHoverBackgroundColor: '#22d3ee',
+        pointRadius: 3,
+        pointHoverRadius: 6,
         fill: true,
-        tension: 0.45
+        tension: 0.4
       }]
     };
   };
@@ -156,12 +161,8 @@ export default function AnalyticsPage({ addToast }) {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
-      duration: 1000,
+      duration: 800,
       easing: 'easeInOutQuart'
-    },
-    interaction: {
-      mode: 'index',
-      intersect: false
     },
     plugins: {
       legend: { display: false },
@@ -169,20 +170,20 @@ export default function AnalyticsPage({ addToast }) {
         backgroundColor: 'rgba(15, 23, 42, 0.95)',
         titleColor: '#f8fafc',
         bodyColor: '#cbd5e1',
-        borderColor: 'rgba(99, 102, 241, 0.4)',
+        borderColor: 'rgba(99, 102, 241, 0.3)',
         borderWidth: 1,
         cornerRadius: 8,
-        padding: 12,
+        padding: 10,
         displayColors: false
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+        grid: { color: 'rgba(255, 255, 255, 0.03)' },
         ticks: { color: '#64748b', font: { size: 11 } }
       },
       y: {
-        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+        grid: { color: 'rgba(255, 255, 255, 0.03)' },
         ticks: { color: '#64748b', font: { size: 11 }, precision: 0 },
         beginAtZero: true
       }
@@ -195,7 +196,7 @@ export default function AnalyticsPage({ addToast }) {
       data: analytics.browsers.map(b => b.count),
       backgroundColor: chartColors.slice(0, analytics.browsers.length),
       borderWidth: 0,
-      hoverOffset: 8
+      hoverOffset: 6
     }]
   } : null;
 
@@ -205,22 +206,19 @@ export default function AnalyticsPage({ addToast }) {
       data: analytics.devices.map(d => d.count),
       backgroundColor: ['#6366f1', '#22d3ee', '#10b981', '#f59e0b'],
       borderWidth: 0,
-      hoverOffset: 8
+      hoverOffset: 6
     }]
   } : null;
 
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '68%',
-    animation: {
-      duration: 800,
-      easing: 'easeOutQuart'
-    },
+    cutout: '70%',
+    animation: { duration: 600 },
     plugins: {
       legend: {
         position: 'bottom',
-        labels: { color: '#94a3b8', font: { size: 11 }, padding: 16 }
+        labels: { color: '#94a3b8', font: { size: 11 }, padding: 12 }
       }
     }
   };
@@ -228,106 +226,91 @@ export default function AnalyticsPage({ addToast }) {
   const ranges = ['24h', '7d', '30d', '90d', 'all'];
 
   return (
-    <div>
-      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+      
+      {/* 1. Header & Integrated Controls Row */}
+      <div className="flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <div>
-          <h2>Analytics</h2>
-          <p>Real-time click tracking, visitor metrics, and performance graphs</p>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Analytics</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Performance insights & traffic metrics</p>
         </div>
 
-        {/* Real-Time Live Status Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {lastSyncTime && isLive && (
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-              Last sync: {lastSyncTime}
-            </span>
-          )}
+        {/* Link Selector + Range Filters + Live Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+          {/* Link Selector Dropdown */}
+          <div style={{ minWidth: '220px' }}>
+            <select
+              id="analytics-url-select"
+              className="input"
+              value={shortCode}
+              onChange={(e) => handleSelectUrl(e.target.value)}
+              style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+            >
+              <option value="">-- Select link --</option>
+              {urls.map(u => (
+                <option key={u.short_code} value={u.short_code}>
+                  /{u.short_code} ({u.click_count} clicks)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Time Range Filter */}
+          <div className="range-filter">
+            {ranges.map(r => (
+              <button
+                key={r}
+                className={`range-btn ${range === r ? 'active' : ''}`}
+                onClick={() => handleRangeChange(r)}
+                style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+              >
+                {r === 'all' ? 'All' : r}
+              </button>
+            ))}
+          </div>
+
+          {/* Live Sync Badge */}
           <button 
             className={`action-btn ${isLive ? 'btn-primary' : ''}`}
             onClick={() => setIsLive(!isLive)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '0.75rem' }}
           >
-            <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa' }} />
-            {isLive ? 'Live · 3s' : 'Paused'}
+            <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa', width: '6px', height: '6px' }} />
+            {isLive ? 'Live 3s' : 'Paused'}
           </button>
         </div>
       </div>
 
-      {/* Dashboard Top Stats */}
-      {dashboardStats && (
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>#</div>
-            <div className="stat-value">{dashboardStats.totalUrls}</div>
-            <div className="stat-label">Total Links</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>↑</div>
-            <div className="stat-value">{dashboardStats.totalClicks}</div>
-            <div className="stat-label">Total Clicks</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>•</div>
-            <div className="stat-value">{dashboardStats.todayClicks}</div>
-            <div className="stat-label">Today's Clicks</div>
-          </div>
+      {/* 2. Top Summary Metric Cards */}
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', margin: 0 }}>
+        <div className="stat-card" style={{ padding: '16px' }}>
+          <div className="stat-value" style={{ fontSize: '1.5rem' }}>{analytics ? analytics.clicksInRange : (dashboardStats?.totalClicks || 0)}</div>
+          <div className="stat-label" style={{ fontSize: '0.75rem' }}>Clicks in Period</div>
         </div>
-      )}
-
-      {/* Link Selector */}
-      <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
-        <div className="input-group">
-          <label htmlFor="analytics-url-select">Select a link to inspect analytics</label>
-          <select
-            id="analytics-url-select"
-            className="input"
-            value={shortCode}
-            onChange={(e) => handleSelectUrl(e.target.value)}
-          >
-            <option value="">-- Choose a short link --</option>
-            {urls.map(u => (
-              <option key={u.short_code} value={u.short_code}>
-                /{u.short_code} → {u.original_url.length > 60 ? u.original_url.substring(0, 60) + '…' : u.original_url}
-              </option>
-            ))}
-          </select>
+        <div className="stat-card" style={{ padding: '16px' }}>
+          <div className="stat-value" style={{ fontSize: '1.5rem' }}>{analytics ? analytics.uniqueVisitors : (dashboardStats?.todayClicks || 0)}</div>
+          <div className="stat-label" style={{ fontSize: '0.75rem' }}>{analytics ? 'Unique Visitors' : 'Today Clicks'}</div>
+        </div>
+        <div className="stat-card" style={{ padding: '16px' }}>
+          <div className="stat-value" style={{ fontSize: '1.5rem' }}>{analytics ? analytics.totalClicks : (dashboardStats?.totalUrls || 0)}</div>
+          <div className="stat-label" style={{ fontSize: '0.75rem' }}>{analytics ? 'Total Lifetime Clicks' : 'Total Links'}</div>
+        </div>
+        <div className="stat-card" style={{ padding: '16px' }}>
+          <div className="stat-value" style={{ fontSize: '1.5rem', color: '#22d3ee' }}>
+            {analytics?.countries?.length ? analytics.countries.length : (analytics?.topReferrers?.length || 0)}
+          </div>
+          <div className="stat-label" style={{ fontSize: '0.75rem' }}>Active Locations</div>
         </div>
       </div>
 
-      {/* Main Analytics Section */}
-      {analytics && (
+      {/* 3. Main Analytics View */}
+      {analytics ? (
         <>
-          {/* Top Summary Bar + Time Range Filter */}
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
-            <div className="stats-grid" style={{ flex: 1, marginBottom: 0, minWidth: '280px' }}>
-              <div className="stat-card">
-                <div className="stat-value">{analytics.clicksInRange}</div>
-                <div className="stat-label">Clicks in Period</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-value">{analytics.uniqueVisitors}</div>
-                <div className="stat-label">Unique Visitors</div>
-              </div>
-            </div>
-
-            <div className="range-filter">
-              {ranges.map(r => (
-                <button
-                  key={r}
-                  className={`range-btn ${range === r ? 'active' : ''}`}
-                  onClick={() => handleRangeChange(r)}
-                >
-                  {r === 'all' ? 'All' : r}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Animated Line Graph Container */}
-          <div className="chart-container" style={{ marginBottom: 'var(--space-lg)' }}>
-            <div className="chart-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: '12px' }}>
-              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                {chartView === 'growth' ? 'Cumulative Click Growth' : chartView === 'bar' ? 'Daily Volume (Bar Chart)' : 'Clicks Over Time'}
+          {/* Animated Main Line Graph Card */}
+          <div className="chart-container" style={{ padding: '20px' }}>
+            <div className="chart-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+              <span className="chart-title" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                {chartView === 'growth' ? 'Cumulative Growth' : chartView === 'bar' ? 'Daily Volume' : 'Click Volume Trend'}
               </span>
 
               {/* View Switcher Controls */}
@@ -336,27 +319,30 @@ export default function AnalyticsPage({ addToast }) {
                   type="button"
                   className={`tab-btn ${chartView === 'line' ? 'active' : ''}`}
                   onClick={() => setChartView('line')}
+                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                 >
-                  Line Trend
+                  Trend
                 </button>
                 <button
                   type="button"
                   className={`tab-btn ${chartView === 'growth' ? 'active' : ''}`}
                   onClick={() => setChartView('growth')}
+                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                 >
-                  Growth Area
+                  Growth
                 </button>
                 <button
                   type="button"
                   className={`tab-btn ${chartView === 'bar' ? 'active' : ''}`}
                   onClick={() => setChartView('bar')}
+                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                 >
-                  Bar Chart
+                  Bar
                 </button>
               </div>
             </div>
 
-            <div style={{ height: '320px', position: 'relative' }}>
+            <div style={{ height: '280px', position: 'relative' }}>
               {getChartDataset() && getChartDataset().labels.length > 0 ? (
                 chartView === 'bar' ? (
                   <Bar data={getChartDataset()} options={chartOptions} />
@@ -365,144 +351,148 @@ export default function AnalyticsPage({ addToast }) {
                 )
               ) : (
                 <div className="empty-state">
-                  <p>No click activity recorded in this time range</p>
+                  <p style={{ fontSize: '0.85rem' }}>No click activity recorded in this period</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Breakdown Charts Grid */}
-          <div className="chart-grid" style={{ marginBottom: 'var(--space-lg)' }}>
-            {/* Browsers */}
-            <div className="chart-container">
-              <div className="chart-header">
-                <span className="chart-title">Browsers</span>
+          {/* 4. Organized 2-Column Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-lg)' }}>
+            
+            {/* Left Column: Browsers & Devices Side-by-Side */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+              {/* Browsers Doughnut */}
+              <div className="chart-container" style={{ padding: '20px' }}>
+                <div className="chart-header" style={{ marginBottom: '12px' }}>
+                  <span className="chart-title" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Browsers</span>
+                </div>
+                <div style={{ height: '200px' }}>
+                  {browserChartData && browserChartData.labels.length > 0 ? (
+                    <Doughnut data={browserChartData} options={doughnutOptions} />
+                  ) : (
+                    <div className="empty-state"><p style={{ fontSize: '0.8rem' }}>No browser data</p></div>
+                  )}
+                </div>
               </div>
-              <div style={{ height: '240px' }}>
-                {browserChartData && browserChartData.labels.length > 0 ? (
-                  <Doughnut data={browserChartData} options={doughnutOptions} />
-                ) : (
-                  <div className="empty-state"><p>No data</p></div>
-                )}
+
+              {/* Devices Doughnut */}
+              <div className="chart-container" style={{ padding: '20px' }}>
+                <div className="chart-header" style={{ marginBottom: '12px' }}>
+                  <span className="chart-title" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Devices</span>
+                </div>
+                <div style={{ height: '200px' }}>
+                  {deviceChartData && deviceChartData.labels.length > 0 ? (
+                    <Doughnut data={deviceChartData} options={doughnutOptions} />
+                  ) : (
+                    <div className="empty-state"><p style={{ fontSize: '0.8rem' }}>No device data</p></div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Devices */}
-            <div className="chart-container">
-              <div className="chart-header">
-                <span className="chart-title">Devices</span>
-              </div>
-              <div style={{ height: '240px' }}>
-                {deviceChartData && deviceChartData.labels.length > 0 ? (
-                  <Doughnut data={deviceChartData} options={doughnutOptions} />
+            {/* Right Column: Geolocation & Top Referrers Progress Meters */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+              
+              {/* Geolocation Traffic */}
+              <div className="chart-container" style={{ padding: '20px' }}>
+                <div className="chart-header" style={{ marginBottom: '16px' }}>
+                  <span className="chart-title" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Locations</span>
+                </div>
+                {analytics?.countries && analytics.countries.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {analytics.countries.slice(0, 5).map((c) => {
+                      const maxCount = Math.max(...analytics.countries.map(item => item.count), 1);
+                      const percentage = Math.round((c.count / maxCount) * 100);
+                      return (
+                        <div key={c.country || 'local'} style={{ background: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '8px' }}>
+                          <div className="flex items-center justify-between" style={{ fontSize: '0.8rem', fontWeight: 500, marginBottom: '4px' }}>
+                            <span>{c.country || 'Direct / Local'}</span>
+                            <span style={{ color: 'var(--text-secondary)' }}>{c.count} clicks</span>
+                          </div>
+                          <div className="progress-container">
+                            <div className="progress-fill" style={{ width: `${percentage}%`, background: '#22d3ee' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <div className="empty-state"><p>No data</p></div>
+                  <div className="empty-state"><p style={{ fontSize: '0.8rem' }}>No location data recorded</p></div>
                 )}
               </div>
+
+              {/* Top Referrers */}
+              <div className="chart-container" style={{ padding: '20px' }}>
+                <div className="chart-header" style={{ marginBottom: '16px' }}>
+                  <span className="chart-title" style={{ fontSize: '0.9rem', fontWeight: 600 }}>Top Referrers</span>
+                </div>
+                {analytics?.topReferrers && analytics.topReferrers.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {analytics.topReferrers.slice(0, 5).map((ref) => {
+                      const maxCount = Math.max(...analytics.topReferrers.map(r => r.count), 1);
+                      const percentage = Math.round((ref.count / maxCount) * 100);
+                      return (
+                        <div key={ref.referrer} style={{ background: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '8px' }}>
+                          <div className="flex items-center justify-between" style={{ fontSize: '0.8rem', fontWeight: 500, marginBottom: '4px' }}>
+                            <span>{ref.referrer === 'direct' ? 'Direct / Bookmark' : ref.referrer}</span>
+                            <span style={{ color: 'var(--text-secondary)' }}>{ref.count} clicks</span>
+                          </div>
+                          <div className="progress-container">
+                            <div className="progress-fill" style={{ width: `${percentage}%`, background: '#6366f1' }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state"><p style={{ fontSize: '0.8rem' }}>No referrer data recorded</p></div>
+                )}
+              </div>
+
             </div>
+
           </div>
 
-          {/* Live Recent Click Log Stream */}
+          {/* 5. Live Click Stream */}
           {analytics.recentClicks && analytics.recentClicks.length > 0 && (
-            <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
-              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Recent Click Stream</h3>
-                <span className="health-badge health-badge-ok">Live Stream Active</span>
+            <div className="card" style={{ padding: '20px' }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 600 }}>Recent Activity Feed</h3>
+                <span className="health-badge health-badge-ok" style={{ fontSize: '0.7rem' }}>Live Stream</span>
               </div>
 
-              <div className="url-list">
-                {analytics.recentClicks.map((click, idx) => (
-                  <div key={idx} className="url-item-card" style={{ padding: '12px 16px' }}>
-                    <div className="url-item-row" style={{ marginBottom: '4px' }}>
-                      <div className="url-item-left">
-                        <span className="click-badge" style={{ fontFamily: 'monospace' }}>
-                          {click.browser || 'Unknown'} · {click.os || 'OS'}
-                        </span>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-                          {new Date(click.clicked_at).toLocaleString()}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                        Referrer: {click.referrer || 'Direct'}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {analytics.recentClicks.slice(0, 5).map((click, idx) => (
+                  <div key={idx} className="flex items-center justify-between" style={{ background: 'var(--bg-tertiary)', padding: '8px 14px', borderRadius: '6px', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span className="click-badge" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                        {click.browser || 'Browser'} · {click.os || 'OS'}
+                      </span>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {click.referrer || 'Direct'}
                       </span>
                     </div>
+                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                      {new Date(click.clicked_at).toLocaleTimeString()}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Geolocation Country Breakdown */}
-          <div className="chart-container" style={{ padding: 'var(--space-xl)', marginBottom: 'var(--space-lg)' }}>
-            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
-              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>Geolocation & Country Traffic</span>
-            </div>
-            {analytics?.countries && analytics.countries.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-md)' }}>
-                {analytics.countries.map((c) => {
-                  const maxCount = Math.max(...analytics.countries.map(item => item.count), 1);
-                  const percentage = Math.round((c.count / maxCount) * 100);
-                  const countryName = c.country || 'Unknown / Local Direct';
-                  return (
-                    <div key={countryName} style={{ background: 'var(--bg-tertiary)', padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
-                      <div className="flex items-center justify-between" style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '6px' }}>
-                        <span>{countryName}</span>
-                        <span style={{ color: 'var(--accent-primary)' }}>{c.count} {c.count === 1 ? 'click' : 'clicks'}</span>
-                      </div>
-                      <div className="progress-container">
-                        <div className="progress-fill" style={{ width: `${percentage}%`, background: '#22d3ee' }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state"><p>No location data recorded yet</p></div>
-            )}
-          </div>
-
-          {/* Top Referrers Bar Distribution */}
-          <div className="chart-container" style={{ padding: 'var(--space-xl)' }}>
-            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
-              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>Top Referrers</span>
-            </div>
-            {analytics?.topReferrers && analytics.topReferrers.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                {analytics.topReferrers.map((ref) => {
-                  const maxCount = Math.max(...analytics.topReferrers.map(r => r.count), 1);
-                  const percentage = Math.round((ref.count / maxCount) * 100);
-                  return (
-                    <div key={ref.referrer} style={{ background: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
-                      <div className="flex items-center justify-between" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        <span>{ref.referrer === 'direct' ? 'Direct / Bookmark' : ref.referrer}</span>
-                        <span>{ref.count} {ref.count === 1 ? 'click' : 'clicks'} ({percentage}%)</span>
-                      </div>
-                      <div className="progress-container" style={{ marginTop: '8px' }}>
-                        <div className="progress-fill" style={{ width: `${percentage}%`, background: '#6366f1' }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state"><p>No referrer data recorded yet</p></div>
-            )}
-          </div>
         </>
-      )}
-
-      {/* Empty State */}
-      {!analytics && !loading && (
+      ) : (
+        /* Empty / Select State */
         <div className="card">
           <div className="empty-state">
             <div className="empty-state-icon" style={{ fontSize: '1.5rem' }}>—</div>
             <h3>Select a link</h3>
-            <p>Choose a link from the dropdown above to view real-time click graphs and traffic analytics</p>
+            <p style={{ fontSize: '0.85rem' }}>Select a link from the dropdown menu above to view its analytics dashboard</p>
           </div>
         </div>
       )}
 
-      {/* Loading State */}
       {loading && (
         <div className="card">
           <div className="empty-state">
