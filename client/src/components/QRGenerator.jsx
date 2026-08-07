@@ -318,12 +318,12 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
                 >
                   None
                 </button>
-                {['⚡', '🐙', '🐦', '📷', '🌐', '💼'].map(preset => (
+                {['Lightning', 'GitHub', 'Twitter', 'Camera', 'Web', 'Brand'].map(preset => (
                   <button
                     key={preset}
                     className={`action-btn ${logoSrc === preset ? 'btn-primary' : ''}`}
                     onClick={() => setLogoSrc(preset)}
-                    style={{ fontSize: '1.1rem' }}
+                    style={{ fontSize: '0.8rem' }}
                   >
                     {preset}
                   </button>

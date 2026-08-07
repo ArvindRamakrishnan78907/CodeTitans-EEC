@@ -27,6 +27,9 @@ export default function ShortenPage({ addToast }) {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
   const [qrData, setQrData] = useState(null);
+  const [aliasStatus, setAliasStatus] = useState(null);
+  const [aliasMessage, setAliasMessage] = useState('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { copied, copy } = useCopy();
 
   // Load URL history
@@ -541,7 +544,7 @@ export default function ShortenPage({ addToast }) {
                     /{res.shortCode}
                   </span>
                   <button className="action-btn" onClick={() => handleCopy(res.shortUrl)}>
-                    📋 Copy
+                    Copy
                   </button>
                 </div>
                 <div className="url-item-original">{res.originalUrl}</div>

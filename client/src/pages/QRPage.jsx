@@ -33,8 +33,8 @@ export default function QRPage({ addToast }) {
   return (
     <div>
       <div className="page-header">
-        <h2>📱 QR Generator</h2>
-        <p>Generate customizable QR codes for your shortened URLs</p>
+        <h2>QR Code Generator</h2>
+        <p>Generate custom QR codes for your links</p>
       </div>
 
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>

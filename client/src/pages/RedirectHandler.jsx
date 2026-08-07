@@ -98,7 +98,7 @@ export default function RedirectHandler() {
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div className="card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center', padding: 'var(--space-2xl)' }}>
-        <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>{isExpired ? '⏳' : '🔒'}</div>
+        <div style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--accent-error)' }}>—</div>
         <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}>
           {isExpired ? 'Link Expired' : 'Link Unavailable'}
         </h2>
