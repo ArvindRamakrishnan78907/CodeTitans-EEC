@@ -34,9 +34,8 @@ export async function generateQR(req, res) {
     const shortUrl = `${baseUrl}/${shortCode}`;
     const destinationUrl = ensureProtocol(url.original_url);
 
-    // If targetMode is 'short' but shortUrl is localhost, fallback to direct destination to ensure phone cameras can scan it
-    const isLocalhost = shortUrl.includes('localhost') || shortUrl.includes('127.0.0.1');
-    const encodedUrl = (targetMode === 'short' && !isLocalhost) ? shortUrl : destinationUrl;
+    // Honor exact targetMode selected by user ('short' -> shortUrl, 'direct' -> destinationUrl)
+    const encodedUrl = targetMode === 'short' ? shortUrl : destinationUrl;
 
     const qrOptions = {
       width: Math.min(Math.max(parseInt(size) || 300, 100), 1000),
@@ -88,9 +87,8 @@ export async function getQRDataUrl(req, res) {
     const shortUrl = `${baseUrl}/${shortCode}`;
     const destinationUrl = ensureProtocol(url.original_url);
 
-    // If targetMode is 'short' but shortUrl is localhost, fallback to direct destination to ensure phone cameras can scan it
-    const isLocalhost = shortUrl.includes('localhost') || shortUrl.includes('127.0.0.1');
-    const encodedUrl = (targetMode === 'short' && !isLocalhost) ? shortUrl : destinationUrl;
+    // Honor exact targetMode selected by user ('short' -> shortUrl, 'direct' -> destinationUrl)
+    const encodedUrl = targetMode === 'short' ? shortUrl : destinationUrl;
 
     const qrSize = Math.min(Math.max(parseInt(size) || 300, 100), 1000);
     const dataUrl = await QRCode.toDataURL(encodedUrl, {
