@@ -25,13 +25,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Global Rate Limiter: Max 100 requests per 15 minutes per IP
+// Global Rate Limiter: Max 2000 requests per 15 minutes per IP (supports live polling)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 2000,
   message: { error: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1'
 });
 app.use(globalLimiter);
 
