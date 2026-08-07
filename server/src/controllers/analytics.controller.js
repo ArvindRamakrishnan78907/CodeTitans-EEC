@@ -72,6 +72,12 @@ export function getAnalytics(req, res) {
       [url.id, sinceDateStr]
     );
 
+    const recentClicks = queryAll(
+      `SELECT clicked_at, referrer, browser, os, device_type, country, ip_hash
+       FROM clicks WHERE url_id = ? ORDER BY clicked_at DESC LIMIT 10`,
+      [url.id]
+    );
+
     res.json({
       url: { ...url, shortUrl: `${config.clientUrl}/${url.short_code}` },
       range,
@@ -82,7 +88,8 @@ export function getAnalytics(req, res) {
       topReferrers,
       browsers,
       operatingSystems,
-      devices
+      devices,
+      recentClicks
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);

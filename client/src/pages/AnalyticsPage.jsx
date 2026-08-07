@@ -29,10 +29,12 @@ const chartColors = [
 export default function AnalyticsPage({ addToast }) {
   const [shortCode, setShortCode] = useState('');
   const [range, setRange] = useState('7d');
+  const [chartView, setChartView] = useState('line'); // 'line' | 'growth' | 'bar'
   const [analytics, setAnalytics] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isLive, setIsLive] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   const [urls, setUrls] = useState([]);
 
   // Load URL query param pre-selection on mount
@@ -55,6 +57,7 @@ export default function AnalyticsPage({ addToast }) {
       if (shortCode) {
         loadAnalytics(shortCode, range, true);
       }
+      setLastSyncTime(new Date().toLocaleTimeString());
     }, 3000);
     return () => clearInterval(interval);
   }, [isLive, shortCode, range]);
@@ -83,6 +86,7 @@ export default function AnalyticsPage({ addToast }) {
     try {
       const data = await api.getAnalytics(code, r);
       setAnalytics(data);
+      setLastSyncTime(new Date().toLocaleTimeString());
     } catch (error) {
       if (!silent) addToast(error.message, 'error');
       setAnalytics(null);
@@ -101,50 +105,84 @@ export default function AnalyticsPage({ addToast }) {
     if (shortCode) loadAnalytics(shortCode, r);
   };
 
-  // Chart configurations
-  const lineChartData = analytics ? {
-    labels: analytics.clicksOverTime.map(d => {
+  // Compute dataset for Line / Growth / Bar
+  const getChartDataset = () => {
+    if (!analytics || !analytics.clicksOverTime) return null;
+
+    const rawLabels = analytics.clicksOverTime.map(d => {
       const date = new Date(d.date);
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }),
-    datasets: [{
-      label: 'Clicks',
-      data: analytics.clicksOverTime.map(d => d.clicks),
-      borderColor: '#6366f1',
-      backgroundColor: 'rgba(99, 102, 241, 0.1)',
-      borderWidth: 2,
-      pointBackgroundColor: '#6366f1',
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      fill: true,
-      tension: 0.4
-    }]
-  } : null;
+    });
 
-  const lineChartOptions = {
+    let dataPoints = analytics.clicksOverTime.map(d => d.clicks);
+
+    if (chartView === 'growth') {
+      let cumulative = 0;
+      dataPoints = dataPoints.map(val => {
+        cumulative += val;
+        return cumulative;
+      });
+    }
+
+    return {
+      labels: rawLabels,
+      datasets: [{
+        label: chartView === 'growth' ? 'Total Cumulative Clicks' : 'Daily Click Volume',
+        data: dataPoints,
+        borderColor: '#6366f1',
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return 'rgba(99, 102, 241, 0.15)';
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(99, 102, 241, 0.45)');
+          gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+          return gradient;
+        },
+        borderWidth: 2.5,
+        pointBackgroundColor: '#6366f1',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#22d3ee',
+        fill: true,
+        tension: 0.45
+      }]
+    };
+  };
+
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1e293b',
-        titleColor: '#f1f5f9',
-        bodyColor: '#94a3b8',
-        borderColor: 'rgba(99, 102, 241, 0.3)',
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#f8fafc',
+        bodyColor: '#cbd5e1',
+        borderColor: 'rgba(99, 102, 241, 0.4)',
         borderWidth: 1,
         cornerRadius: 8,
-        padding: 12
+        padding: 12,
+        displayColors: false
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(99, 102, 241, 0.06)' },
+        grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: { color: '#64748b', font: { size: 11 } }
       },
       y: {
-        grid: { color: 'rgba(99, 102, 241, 0.06)' },
+        grid: { color: 'rgba(255, 255, 255, 0.04)' },
         ticks: { color: '#64748b', font: { size: 11 }, precision: 0 },
         beginAtZero: true
       }
@@ -171,63 +209,18 @@ export default function AnalyticsPage({ addToast }) {
     }]
   } : null;
 
-  const referrerChartData = analytics ? {
-    labels: analytics.topReferrers.map(r => {
-      const ref = r.referrer;
-      if (ref === 'direct') return 'Direct';
-      try {
-        return new URL(ref).hostname;
-      } catch {
-        return ref.length > 20 ? ref.substring(0, 20) + '…' : ref;
-      }
-    }),
-    datasets: [{
-      label: 'Visits',
-      data: analytics.topReferrers.map(r => r.count),
-      backgroundColor: 'rgba(99, 102, 241, 0.6)',
-      borderColor: '#6366f1',
-      borderWidth: 1,
-      borderRadius: 6,
-      borderSkipped: false
-    }]
-  } : null;
-
   const doughnutOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '65%',
+    cutout: '68%',
+    animation: {
+      duration: 800,
+      easing: 'easeOutQuart'
+    },
     plugins: {
       legend: {
         position: 'bottom',
         labels: { color: '#94a3b8', font: { size: 11 }, padding: 16 }
-      }
-    }
-  };
-
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: 'y',
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1e293b',
-        titleColor: '#f1f5f9',
-        bodyColor: '#94a3b8',
-        borderColor: 'rgba(99, 102, 241, 0.3)',
-        borderWidth: 1,
-        cornerRadius: 8
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(99, 102, 241, 0.06)' },
-        ticks: { color: '#64748b', precision: 0 },
-        beginAtZero: true
-      },
-      y: {
-        grid: { display: false },
-        ticks: { color: '#94a3b8', font: { size: 11 } }
       }
     }
   };
@@ -239,21 +232,28 @@ export default function AnalyticsPage({ addToast }) {
       <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <div>
           <h2>Analytics</h2>
-          <p>Click performance and traffic insights</p>
+          <p>Real-time click tracking, visitor metrics, and performance graphs</p>
         </div>
 
-        {/* Live Real-time Indicator Toggle */}
-        <button 
-          className={`action-btn ${isLive ? 'btn-primary' : ''}`}
-          onClick={() => setIsLive(!isLive)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}
-        >
-          <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa' }} />
-          {isLive ? 'Live · 3s' : 'Paused'}
-        </button>
+        {/* Real-Time Live Status Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {lastSyncTime && isLive && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+              Last sync: {lastSyncTime}
+            </span>
+          )}
+          <button 
+            className={`action-btn ${isLive ? 'btn-primary' : ''}`}
+            onClick={() => setIsLive(!isLive)}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}
+          >
+            <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa' }} />
+            {isLive ? 'Live · 3s' : 'Paused'}
+          </button>
+        </div>
       </div>
 
-      {/* Dashboard Stats */}
+      {/* Dashboard Top Stats */}
       {dashboardStats && (
         <div className="stats-grid">
           <div className="stat-card">
@@ -274,16 +274,17 @@ export default function AnalyticsPage({ addToast }) {
         </div>
       )}
 
-      {/* URL Selector */}
+      {/* Link Selector */}
       <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
         <div className="input-group">
-          <label>Select a link to view analytics</label>
+          <label htmlFor="analytics-url-select">Select a link to inspect analytics</label>
           <select
+            id="analytics-url-select"
             className="input"
             value={shortCode}
             onChange={(e) => handleSelectUrl(e.target.value)}
           >
-            <option value="">-- Choose a link --</option>
+            <option value="">-- Choose a short link --</option>
             {urls.map(u => (
               <option key={u.short_code} value={u.short_code}>
                 /{u.short_code} → {u.original_url.length > 60 ? u.original_url.substring(0, 60) + '…' : u.original_url}
@@ -293,12 +294,12 @@ export default function AnalyticsPage({ addToast }) {
         </div>
       </div>
 
-      {/* Analytics Content */}
+      {/* Main Analytics Section */}
       {analytics && (
         <>
-          {/* Range Filter + Summary */}
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
-            <div className="stats-grid" style={{ flex: 1, marginBottom: 0, marginRight: 'var(--space-lg)' }}>
+          {/* Top Summary Bar + Time Range Filter */}
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+            <div className="stats-grid" style={{ flex: 1, marginBottom: 0, minWidth: '280px' }}>
               <div className="stat-card">
                 <div className="stat-value">{analytics.clicksInRange}</div>
                 <div className="stat-label">Clicks in Period</div>
@@ -322,30 +323,62 @@ export default function AnalyticsPage({ addToast }) {
             </div>
           </div>
 
-          {/* Clicks Over Time */}
+          {/* Animated Line Graph Container */}
           <div className="chart-container" style={{ marginBottom: 'var(--space-lg)' }}>
-            <div className="chart-header">
-              <span className="chart-title">Clicks over time</span>
+            <div className="chart-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: '12px' }}>
+              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>
+                {chartView === 'growth' ? 'Cumulative Click Growth' : chartView === 'bar' ? 'Daily Volume (Bar Chart)' : 'Clicks Over Time'}
+              </span>
+
+              {/* View Switcher Controls */}
+              <div className="mode-tabs" style={{ marginBottom: 0 }}>
+                <button
+                  type="button"
+                  className={`tab-btn ${chartView === 'line' ? 'active' : ''}`}
+                  onClick={() => setChartView('line')}
+                >
+                  Line Trend
+                </button>
+                <button
+                  type="button"
+                  className={`tab-btn ${chartView === 'growth' ? 'active' : ''}`}
+                  onClick={() => setChartView('growth')}
+                >
+                  Growth Area
+                </button>
+                <button
+                  type="button"
+                  className={`tab-btn ${chartView === 'bar' ? 'active' : ''}`}
+                  onClick={() => setChartView('bar')}
+                >
+                  Bar Chart
+                </button>
+              </div>
             </div>
-            <div style={{ height: '300px' }}>
-              {lineChartData && lineChartData.labels.length > 0 ? (
-                <Line data={lineChartData} options={lineChartOptions} />
+
+            <div style={{ height: '320px', position: 'relative' }}>
+              {getChartDataset() && getChartDataset().labels.length > 0 ? (
+                chartView === 'bar' ? (
+                  <Bar data={getChartDataset()} options={chartOptions} />
+                ) : (
+                  <Line data={getChartDataset()} options={chartOptions} />
+                )
               ) : (
                 <div className="empty-state">
-                  <p>No click data for this period</p>
+                  <p>No click activity recorded in this time range</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Charts Grid */}
-          <div className="chart-grid">
-            {/* Browser Breakdown */}
+          {/* Breakdown Charts Grid */}
+          <div className="chart-grid" style={{ marginBottom: 'var(--space-lg)' }}>
+            {/* Browsers */}
             <div className="chart-container">
               <div className="chart-header">
                 <span className="chart-title">Browsers</span>
               </div>
-              <div style={{ height: '250px' }}>
+              <div style={{ height: '240px' }}>
                 {browserChartData && browserChartData.labels.length > 0 ? (
                   <Doughnut data={browserChartData} options={doughnutOptions} />
                 ) : (
@@ -354,12 +387,12 @@ export default function AnalyticsPage({ addToast }) {
               </div>
             </div>
 
-            {/* Device Breakdown */}
+            {/* Devices */}
             <div className="chart-container">
               <div className="chart-header">
                 <span className="chart-title">Devices</span>
               </div>
-              <div style={{ height: '250px' }}>
+              <div style={{ height: '240px' }}>
                 {deviceChartData && deviceChartData.labels.length > 0 ? (
                   <Doughnut data={deviceChartData} options={doughnutOptions} />
                 ) : (
@@ -369,24 +402,54 @@ export default function AnalyticsPage({ addToast }) {
             </div>
           </div>
 
-          {/* Top Referrers with Animated Progress Bars */}
-          <div className="chart-container" style={{ marginTop: 'var(--space-lg)', padding: 'var(--space-xl)' }}>
-            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
-              <span className="chart-title" style={{ fontSize: '1.1rem', fontWeight: 700 }}>Top referrers</span>
+          {/* Live Recent Click Log Stream */}
+          {analytics.recentClicks && analytics.recentClicks.length > 0 && (
+            <div className="card" style={{ marginBottom: 'var(--space-lg)' }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Recent Click Stream</h3>
+                <span className="health-badge health-badge-ok">Live Stream Active</span>
+              </div>
+
+              <div className="url-list">
+                {analytics.recentClicks.map((click, idx) => (
+                  <div key={idx} className="url-item-card" style={{ padding: '12px 16px' }}>
+                    <div className="url-item-row" style={{ marginBottom: '4px' }}>
+                      <div className="url-item-left">
+                        <span className="click-badge" style={{ fontFamily: 'monospace' }}>
+                          {click.browser || 'Unknown'} · {click.os || 'OS'}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+                          {new Date(click.clicked_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                        Referrer: {click.referrer || 'Direct'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {analytics?.referrers && analytics.referrers.length > 0 ? (
+          )}
+
+          {/* Top Referrers Bar Distribution */}
+          <div className="chart-container" style={{ padding: 'var(--space-xl)' }}>
+            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
+              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>Top Referrers</span>
+            </div>
+            {analytics?.topReferrers && analytics.topReferrers.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                {analytics.referrers.map((ref) => {
-                  const maxCount = Math.max(...analytics.referrers.map(r => r.count), 1);
+                {analytics.topReferrers.map((ref) => {
+                  const maxCount = Math.max(...analytics.topReferrers.map(r => r.count), 1);
                   const percentage = Math.round((ref.count / maxCount) * 100);
                   return (
                     <div key={ref.referrer} style={{ background: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
-                      <div className="flex items-center justify-between" style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                        <span>{ref.referrer}</span>
+                      <div className="flex items-center justify-between" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                        <span>{ref.referrer === 'direct' ? 'Direct / Bookmark' : ref.referrer}</span>
                         <span>{ref.count} {ref.count === 1 ? 'click' : 'clicks'} ({percentage}%)</span>
                       </div>
-                      <div className="progress-container">
-                        <div className="progress-fill" style={{ width: `${percentage}%` }} />
+                      <div className="progress-container" style={{ marginTop: '8px' }}>
+                        <div className="progress-fill" style={{ width: `${percentage}%`, background: '#6366f1' }} />
                       </div>
                     </div>
                   );
@@ -399,17 +462,18 @@ export default function AnalyticsPage({ addToast }) {
         </>
       )}
 
-      {/* Empty state when no URL selected */}
+      {/* Empty State */}
       {!analytics && !loading && (
         <div className="card">
           <div className="empty-state">
             <div className="empty-state-icon" style={{ fontSize: '1.5rem' }}>—</div>
             <h3>Select a link</h3>
-            <p>Choose a link from the dropdown above to see performance data</p>
+            <p>Choose a link from the dropdown above to view real-time click graphs and traffic analytics</p>
           </div>
         </div>
       )}
 
+      {/* Loading State */}
       {loading && (
         <div className="card">
           <div className="empty-state">
