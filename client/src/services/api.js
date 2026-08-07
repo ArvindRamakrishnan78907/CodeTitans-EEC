@@ -3,6 +3,11 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_URL || 'http://localhost:3001';
 
+// Always use the frontend's actual domain so there's never a "localhost" leak in production
+function formatShortUrl(shortCode) {
+  return `${window.location.origin}/${shortCode}`;
+}
+
 /**
  * API service for communicating with the URL Shortener backend
  */
@@ -20,6 +25,7 @@ const api = {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to shorten URL');
+    data.shortUrl = formatShortUrl(data.shortCode);
     return data;
   },
 
@@ -27,6 +33,11 @@ const api = {
     const res = await fetch(`${API_BASE}/urls?page=${page}&limit=${limit}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    
+    // Override shortUrl for all items
+    if (data.urls) {
+      data.urls = data.urls.map(u => ({ ...u, shortUrl: formatShortUrl(u.short_code) }));
+    }
     return data;
   },
 
@@ -63,6 +74,9 @@ const api = {
     const res = await fetch(`${API_BASE}/qr/${shortCode}/data?${params.toString()}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    
+    // Ensure the returned shortUrl is localized to the frontend domain
+    data.shortUrl = formatShortUrl(shortCode);
     return data;
   },
 
@@ -71,6 +85,8 @@ const api = {
     const res = await fetch(`${API_BASE}/analytics/${shortCode}?range=${range}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    
+    if (data.url) data.url.shortUrl = formatShortUrl(data.url.short_code);
     return data;
   },
 
@@ -78,6 +94,13 @@ const api = {
     const res = await fetch(`${API_BASE}/analytics/dashboard`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    
+    if (data.recentUrls) {
+      data.recentUrls = data.recentUrls.map(u => ({ ...u, shortUrl: formatShortUrl(u.short_code) }));
+    }
+    if (data.topUrls) {
+      data.topUrls = data.topUrls.map(u => ({ ...u, shortUrl: formatShortUrl(u.short_code) }));
+    }
     return data;
   },
 
