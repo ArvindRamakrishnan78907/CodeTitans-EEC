@@ -90,14 +90,14 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
 
   const handleCopyCurl = (code) => {
     navigator.clipboard.writeText(code);
-    if (addToast) addToast('cURL command copied to clipboard! 📋', 'success');
+    if (addToast) addToast('Copied to clipboard', 'success');
   };
 
   return (
     <div>
       <div className="page-header">
-        <h2>⚙️ Settings & Preferences</h2>
-        <p>Customize your workspace theme, default preferences, export your data, and view documentation</p>
+        <h2>Settings</h2>
+        <p>Preferences, theme, data export, and API documentation</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', maxWidth: '760px' }}>
@@ -105,7 +105,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
         {/* Appearance Section */}
         <div className="card">
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-            🎨 Appearance & Theme
+            Appearance
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-lg)' }}>
             Choose your preferred color theme for the SnipLink interface.
@@ -121,9 +121,9 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               }}
               onClick={() => onThemeChange('dark')}
             >
-              <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🌙</div>
-              <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>Dark Mode</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Deep glassmorphic dark theme</div>
+              <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Dark</div>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>Dark mode</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Low-light interface</div>
             </div>
 
             <div 
@@ -135,9 +135,9 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               }}
               onClick={() => onThemeChange('light')}
             >
-              <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>☀️</div>
-              <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>Light Mode</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Clean, high-contrast light theme</div>
+              <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Light</div>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>Light mode</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>High-contrast light interface</div>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
         {/* Default Link Preferences */}
         <div className="card">
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-            ⚡ Default Link Rules
+            Link defaults
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-lg)' }}>
             Set automatic defaults for newly created short links.
@@ -182,7 +182,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
         {/* Custom Domain Override */}
         <div className="card">
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-            🌐 Custom Domain Branding
+            Custom domain
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-lg)' }}>
             Override the base domain string shown when copying generated short links.
@@ -207,7 +207,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
           <div className="flex items-center justify-between" style={{ cursor: 'pointer' }} onClick={() => setShowDocs(!showDocs)}>
             <div>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-                📖 Documentation & API Guide
+                Documentation
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                 REST API endpoints, cURL examples, keyboard shortcuts, and feature usage instructions
@@ -227,19 +227,19 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
                   className={`tab-btn ${activeDocTab === 'api' ? 'active' : ''}`}
                   onClick={() => setActiveDocTab('api')}
                 >
-                  ⚡ REST API Guide
+                  API Reference
                 </button>
                 <button 
                   className={`tab-btn ${activeDocTab === 'features' ? 'active' : ''}`}
                   onClick={() => setActiveDocTab('features')}
                 >
-                  🛠️ Feature Specs
+                  Features
                 </button>
                 <button 
                   className={`tab-btn ${activeDocTab === 'shortcuts' ? 'active' : ''}`}
                   onClick={() => setActiveDocTab('shortcuts')}
                 >
-                  ⌨️ Shortcuts
+                  Shortcuts
                 </button>
               </div>
 
@@ -267,7 +267,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
                         style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 8px', fontSize: '0.75rem' }}
                         onClick={() => handleCopyCurl(`curl -X POST http://localhost:3001/api/shorten -H "Content-Type: application/json" -d '{"url": "https://example.com", "customAlias": "mybrand"}'`)}
                       >
-                        📋 Copy
+                        Copy
                       </button>
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
                         style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 8px', fontSize: '0.75rem' }}
                         onClick={() => handleCopyCurl(`curl "http://localhost:3001/api/qr/mybrand/data?targetMode=direct"`)}
                       >
-                        📋 Copy
+                        Copy
                       </button>
                     </div>
                   </div>
@@ -302,15 +302,15 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               {activeDocTab === 'features' && (
                 <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div className="config-card">
-                    <strong style={{ color: 'var(--text-primary)' }}>🔐 Password Protection & Rate Limiting:</strong>
+                    <strong style={{ color: 'var(--text-primary)' }}>Password Protection & Rate Limiting</strong>
                     <p style={{ marginTop: '4px' }}>Protected links require password verification before redirecting. The `/verify` endpoint is rate-limited to 5 requests per minute to prevent brute-force attacks.</p>
                   </div>
                   <div className="config-card">
-                    <strong style={{ color: 'var(--text-primary)' }}>⏳ Expiration & Click Limits:</strong>
+                    <strong style={{ color: 'var(--text-primary)' }}>Expiration & Click Limits</strong>
                     <p style={{ marginTop: '4px' }}>Links can expire by timestamp or when max clicks are reached. Expired links display a styled Error Card instead of raw JSON.</p>
                   </div>
                   <div className="config-card">
-                    <strong style={{ color: 'var(--text-primary)' }}>🎨 QR Logo Overlay Engine:</strong>
+                    <strong style={{ color: 'var(--text-primary)' }}>QR Logo Overlay Engine</strong>
                     <p style={{ marginTop: '4px' }}>Center logos use canvas compositing with Error Correction Level H (30% fault tolerance), ensuring 100% scannability on phone cameras.</p>
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
         {/* Data Backup & Maintenance */}
         <div className="card">
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-            💾 Data Backup & Maintenance
+            Data & export
           </h3>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-lg)' }}>
             Export your short links for reports, or clear your local cache.
@@ -347,13 +347,13 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
 
           <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
             <button className="action-btn" onClick={handleExportCSV} disabled={exporting}>
-              📊 Export CSV Report
+              Export CSV
             </button>
             <button className="action-btn" onClick={handleExportJSON} disabled={exporting}>
-              📥 Export JSON Backup
+              Export JSON
             </button>
             <button className="action-btn action-btn-danger" onClick={handleClearHistory}>
-              🗑️ Reset Local Preferences
+              Reset preferences
             </button>
           </div>
         </div>

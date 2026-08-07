@@ -238,8 +238,8 @@ export default function AnalyticsPage({ addToast }) {
     <div>
       <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <div>
-          <h2>📊 Real-Time Analytics</h2>
-          <p>Track click statistics, geographic trends, and referrer sources in real time</p>
+          <h2>Analytics</h2>
+          <p>Click performance and traffic insights</p>
         </div>
 
         {/* Live Real-time Indicator Toggle */}
@@ -249,7 +249,7 @@ export default function AnalyticsPage({ addToast }) {
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}
         >
           <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa' }} />
-          {isLive ? '🟢 LIVE REAL-TIME (3s Sync)' : '⏸️ Live Sync Paused'}
+          {isLive ? 'Live · 3s' : 'Paused'}
         </button>
       </div>
 
@@ -257,17 +257,17 @@ export default function AnalyticsPage({ addToast }) {
       {dashboardStats && (
         <div className="stats-grid">
           <div className="stat-card">
-            <div className="stat-icon">🔗</div>
+            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>#</div>
             <div className="stat-value">{dashboardStats.totalUrls}</div>
             <div className="stat-label">Total Links</div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">👆</div>
+            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>↑</div>
             <div className="stat-value">{dashboardStats.totalClicks}</div>
             <div className="stat-label">Total Clicks</div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon">📈</div>
+            <div className="stat-icon" style={{ fontSize: '0.9rem' }}>•</div>
             <div className="stat-value">{dashboardStats.todayClicks}</div>
             <div className="stat-label">Today's Clicks</div>
           </div>
@@ -325,7 +325,7 @@ export default function AnalyticsPage({ addToast }) {
           {/* Clicks Over Time */}
           <div className="chart-container" style={{ marginBottom: 'var(--space-lg)' }}>
             <div className="chart-header">
-              <span className="chart-title">📈 Clicks Over Time</span>
+              <span className="chart-title">Clicks over time</span>
             </div>
             <div style={{ height: '300px' }}>
               {lineChartData && lineChartData.labels.length > 0 ? (
@@ -343,7 +343,7 @@ export default function AnalyticsPage({ addToast }) {
             {/* Browser Breakdown */}
             <div className="chart-container">
               <div className="chart-header">
-                <span className="chart-title">🌐 Browsers</span>
+                <span className="chart-title">Browsers</span>
               </div>
               <div style={{ height: '250px' }}>
                 {browserChartData && browserChartData.labels.length > 0 ? (
@@ -357,7 +357,7 @@ export default function AnalyticsPage({ addToast }) {
             {/* Device Breakdown */}
             <div className="chart-container">
               <div className="chart-header">
-                <span className="chart-title">📱 Devices</span>
+                <span className="chart-title">Devices</span>
               </div>
               <div style={{ height: '250px' }}>
                 {deviceChartData && deviceChartData.labels.length > 0 ? (
@@ -372,7 +372,7 @@ export default function AnalyticsPage({ addToast }) {
           {/* Top Referrers with Animated Progress Bars */}
           <div className="chart-container" style={{ marginTop: 'var(--space-lg)', padding: 'var(--space-xl)' }}>
             <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
-              <span className="chart-title" style={{ fontSize: '1.1rem', fontWeight: 700 }}>🔗 Top Referrer Distribution</span>
+              <span className="chart-title" style={{ fontSize: '1.1rem', fontWeight: 700 }}>Top referrers</span>
             </div>
             {analytics?.referrers && analytics.referrers.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
@@ -382,7 +382,7 @@ export default function AnalyticsPage({ addToast }) {
                   return (
                     <div key={ref.referrer} style={{ background: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
                       <div className="flex items-center justify-between" style={{ fontSize: '0.9rem', fontWeight: 600 }}>
-                        <span>🌐 {ref.referrer}</span>
+                        <span>{ref.referrer}</span>
                         <span>{ref.count} {ref.count === 1 ? 'click' : 'clicks'} ({percentage}%)</span>
                       </div>
                       <div className="progress-container">
@@ -403,9 +403,9 @@ export default function AnalyticsPage({ addToast }) {
       {!analytics && !loading && (
         <div className="card">
           <div className="empty-state">
-            <div className="empty-state-icon">📊</div>
-            <h3>Select a link to view analytics</h3>
-            <p>Choose from the dropdown above to see detailed click analytics, referrer data, and device breakdowns</p>
+            <div className="empty-state-icon" style={{ fontSize: '1.5rem' }}>—</div>
+            <h3>Select a link</h3>
+            <p>Choose a link from the dropdown above to see performance data</p>
           </div>
         </div>
       )}
@@ -413,7 +413,7 @@ export default function AnalyticsPage({ addToast }) {
       {loading && (
         <div className="card">
           <div className="empty-state">
-            <div className="empty-state-icon" style={{ animation: 'spin 2s linear infinite' }}>⚡</div>
+            <div className="empty-state-icon" style={{ animation: 'spin 2s linear infinite', fontSize: '1rem' }}>○</div>
             <h3>Loading analytics...</h3>
           </div>
         </div>

@@ -189,7 +189,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
       document.body.removeChild(a);
 
       if (addToast) {
-        addToast(`QR code downloaded as ${format.toUpperCase()}! 📥`, 'success');
+        addToast(`QR code downloaded`, 'success');
       }
     } catch (e) {
       console.error(e);
@@ -228,7 +228,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
             onClick={() => setTargetMode('direct')}
             title="Encodes destination URL directly — Guaranteed to scan 100% reliably on phone cameras"
           >
-            🎯 Direct Target URL (Phone Camera Safe)
+            Direct target URL
           </button>
           <button
             type="button"
@@ -236,7 +236,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
             onClick={() => setTargetMode('short')}
             title="Encodes short link redirect URL"
           >
-            🔗 Short Link Redirect
+            Short link redirect
           </button>
         </div>
       </div>
@@ -296,14 +296,14 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           onClick={() => setShowCustomizer(!showCustomizer)}
           style={{ width: '100%', marginTop: '8px' }}
         >
-          {showCustomizer ? '▲ Hide Logo Customizer' : '🎨 Customize Logo Overlay & Branding'}
+          {showCustomizer ? 'Hide customizer' : 'Customize logo'}
         </button>
 
         {/* Customizer Panel */}
         {showCustomizer && (
           <div className="config-card" style={{ marginTop: '16px', animation: 'slideDown 0.2s ease-out' }}>
             <h4 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '12px' }}>
-              🏷️ Add Logo in Center (100% Scannable)
+              Center logo overlay (scannable)
             </h4>
 
             {/* Presets */}
@@ -391,7 +391,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
 
         {!loading && error && (
           <div style={{ textAlign: 'center', padding: '16px' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⚠️</div>
+            <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>—</div>
             <p style={{ fontSize: '0.85rem', color: 'var(--accent-error)', fontWeight: 600, marginBottom: '12px' }}>{error}</p>
             <button
               onClick={() => fetchQRData(true)}
@@ -404,7 +404,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
 
         {!loading && !error && !qrData && (
           <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '8px', opacity: 0.6 }}>📱</div>
+            <div style={{ fontSize: '1.5rem', marginBottom: '8px', opacity: 0.6 }}>—</div>
             <p style={{ fontSize: '0.85rem', fontWeight: 500 }}>Select or shorten a URL to generate a QR Code</p>
           </div>
         )}
@@ -458,7 +458,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           }}
         >
           <div>
-            <strong style={{ color: 'var(--text-primary)' }}>📱 Encoded Scan Target: </strong>
+            <strong style={{ color: 'var(--text-primary)' }}>Encoded scan target: </strong>
             <span style={{ fontFamily: 'monospace', color: '#22c55e', fontWeight: 600, wordBreak: 'break-all' }}>
               {qrData.encodedUrl}
             </span>
@@ -493,7 +493,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           className="btn btn-primary"
           style={{ padding: '10px 14px', fontSize: '0.825rem' }}
         >
-          📥 Download PNG
+          Download PNG
         </button>
 
         <button
@@ -502,7 +502,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           className="btn btn-secondary"
           style={{ padding: '10px 14px', fontSize: '0.825rem' }}
         >
-          📥 Download SVG
+          Download SVG
         </button>
 
         <button
@@ -511,7 +511,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           className={`btn ${copied ? 'btn-success' : 'btn-secondary'}`}
           style={{ padding: '10px 14px', fontSize: '0.825rem' }}
         >
-          {copied ? '✅ Copied!' : '📋 Copy Short URL'}
+          {copied ? 'Copied!' : 'Copy short URL'}
         </button>
 
         <button
@@ -520,7 +520,7 @@ export const QRGenerator = ({ shortCode, initialSize = 300, addToast }) => {
           className="btn btn-secondary"
           style={{ padding: '10px 14px', fontSize: '0.825rem' }}
         >
-          🔄 Regenerate
+          Regenerate
         </button>
       </div>
     </div>

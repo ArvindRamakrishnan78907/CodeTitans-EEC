@@ -171,7 +171,7 @@ export default function ShortenPage({ addToast }) {
 
       const results = await Promise.all(promises);
       setBulkResults(results);
-      addToast(`Successfully shortened ${results.length} URLs! 🚀`, 'success');
+      addToast(`${results.length} links shortened`, 'success');
       setBulkUrlsText('');
       loadHistory();
     } catch (err) {
@@ -185,7 +185,7 @@ export default function ShortenPage({ addToast }) {
     if (bulkResults.length === 0) return;
     const allLinks = bulkResults.map(r => r.shortUrl).join('\n');
     copy(allLinks);
-    addToast('Copied all short links to clipboard! 📋', 'success');
+    addToast('All links copied to clipboard', 'success');
   };
 
   const handleCopy = (text) => {
@@ -216,8 +216,8 @@ export default function ShortenPage({ addToast }) {
   return (
     <div>
       <div className="page-header">
-        <h2>Shorten URL</h2>
-        <p>Transform long URLs into short, shareable links instantly</p>
+        <h2>Links</h2>
+        <p>Create and manage your short links</p>
       </div>
 
       {/* Mode Switcher Tabs */}
@@ -227,14 +227,14 @@ export default function ShortenPage({ addToast }) {
           className={`tab-btn ${mode === 'single' ? 'active' : ''}`}
           onClick={() => setMode('single')}
         >
-          🔗 Single Link
+          Single
         </button>
         <button
           type="button"
           className={`tab-btn ${mode === 'bulk' ? 'active' : ''}`}
           onClick={() => setMode('bulk')}
         >
-          📦 Bulk Mode (Batch)
+          Bulk
         </button>
       </div>
 
@@ -243,10 +243,10 @@ export default function ShortenPage({ addToast }) {
         <form onSubmit={handleSubmit} className="card" style={{ marginBottom: 'var(--space-xl)' }}>
           <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
             <div className="flex items-center justify-between">
-              <label htmlFor="url-input">Paste your long URL</label>
+              <label htmlFor="url-input">Destination URL</label>
               {url.trim() && (
                 <span className="health-badge health-badge-ok">
-                  🟢 Auto-HTTP Enabled
+                  https:// auto-applied
                 </span>
               )}
             </div>
@@ -255,7 +255,7 @@ export default function ShortenPage({ addToast }) {
                 id="url-input"
                 type="text"
                 className="input input-lg"
-                placeholder="example.com or https://your-long-link..."
+                placeholder="example.com/your-link"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 autoFocus
@@ -511,7 +511,7 @@ export default function ShortenPage({ addToast }) {
             disabled={bulkLoading || !bulkUrlsText.trim()}
             style={{ width: '100%' }}
           >
-            {bulkLoading ? 'Processing Batch...' : '🚀 Shorten All Links'}
+            {bulkLoading ? 'Processing...' : 'Shorten all'}
           </button>
         </form>
       )}
@@ -520,9 +520,9 @@ export default function ShortenPage({ addToast }) {
       {bulkResults.length > 0 && (
         <div className="card" style={{ marginBottom: 'var(--space-xl)' }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>📦 Batch Shorten Results ({bulkResults.length})</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Batch results ({bulkResults.length})</h3>
             <button className="btn btn-primary btn-sm" onClick={handleCopyAllBulk}>
-              📋 Copy All Short Links
+              Copy all
             </button>
           </div>
           <div className="url-list">
@@ -536,7 +536,7 @@ export default function ShortenPage({ addToast }) {
                     📋 Copy
                   </button>
                 </div>
-                <div className="url-item-original">🔗 {res.originalUrl}</div>
+                <div className="url-item-original">{res.originalUrl}</div>
               </div>
             ))}
           </div>
@@ -547,7 +547,7 @@ export default function ShortenPage({ addToast }) {
       <div className="card" style={{ marginTop: 'var(--space-xl)' }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
           <div className="flex items-center gap-sm">
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>📜 Recent Links</h3>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Recent</h3>
             <span className="click-badge" style={{ fontSize: '0.85rem' }}>{history.length} links</span>
           </div>
 
@@ -557,7 +557,7 @@ export default function ShortenPage({ addToast }) {
               <input
                 type="text"
                 className="input"
-                placeholder="🔍 Search recent links..."
+                placeholder="Search links..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{ padding: '8px 12px', fontSize: '0.85rem' }}
@@ -568,7 +568,7 @@ export default function ShortenPage({ addToast }) {
 
         {history.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🔗</div>
+            <div className="empty-state-icon" style={{ fontSize: '1.5rem' }}>—</div>
             <h3>No links yet</h3>
             <p>Shorten your first URL to see it here</p>
           </div>
@@ -591,7 +591,7 @@ export default function ShortenPage({ addToast }) {
                         /{item.short_code}
                       </span>
                       <span className="click-badge">
-                        🔥 {item.click_count} {item.click_count === 1 ? 'click' : 'clicks'}
+                        {item.click_count} {item.click_count === 1 ? 'click' : 'clicks'}
                       </span>
                       <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>
                         {formatDate(item.created_at)}
@@ -604,7 +604,7 @@ export default function ShortenPage({ addToast }) {
                         onClick={() => handleCopy(item.shortUrl)}
                         title="Copy short link"
                       >
-                        📋 Copy
+                        Copy
                       </button>
                       <a
                         href={item.original_url}
@@ -613,34 +613,34 @@ export default function ShortenPage({ addToast }) {
                         className="action-btn"
                         title="Visit original URL"
                       >
-                        ↗️ Open
+                        Open
                       </a>
                       <button
                         className="action-btn"
                         onClick={() => navigate('/qr')}
                         title="Generate QR code"
                       >
-                        📱 QR
+                        QR
                       </button>
                       <button
                         className="action-btn"
                         onClick={() => navigate(`/analytics?code=${item.short_code}`)}
                         title="View real-time analytics"
                       >
-                        📊 Stats
+                        Stats
                       </button>
                       <button
                         className="action-btn action-btn-danger"
                         onClick={() => handleDelete(item.short_code)}
                         title="Delete link"
                       >
-                        🗑️
+                        ×
                       </button>
                     </div>
                   </div>
 
                   <div className="url-item-original" title={item.original_url}>
-                    🔗 {item.original_url}
+                    {item.original_url}
                   </div>
                 </div>
               ))}
