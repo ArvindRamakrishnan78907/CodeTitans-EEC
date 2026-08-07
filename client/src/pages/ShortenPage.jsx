@@ -6,6 +6,8 @@ export default function ShortenPage({ addToast }) {
   const [url, setUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [useCustomAlias, setUseCustomAlias] = useState(false);
+  const [password, setPassword] = useState('');
+  const [usePassword, setUsePassword] = useState(false);
   const [aliasStatus, setAliasStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
   const [aliasMessage, setAliasMessage] = useState('');
   const [result, setResult] = useState(null);
@@ -67,7 +69,11 @@ export default function ShortenPage({ addToast }) {
 
     setLoading(true);
     try {
-      const data = await api.shortenUrl(url.trim(), useCustomAlias ? customAlias : null);
+      const data = await api.shortenUrl(
+        url.trim(), 
+        useCustomAlias ? customAlias : null,
+        usePassword ? password : null
+      );
       setResult(data);
 
       // Fetch QR for result
@@ -81,6 +87,7 @@ export default function ShortenPage({ addToast }) {
       addToast('URL shortened successfully! 🎉', 'success');
       setUrl('');
       setCustomAlias('');
+      setPassword('');
       loadHistory();
     } catch (error) {
       addToast(error.message, 'error');
@@ -152,46 +159,87 @@ export default function ShortenPage({ addToast }) {
           </div>
         </div>
 
-        {/* Custom Alias Toggle */}
-        <div className="toggle-container" style={{ marginBottom: useCustomAlias ? 'var(--space-md)' : 0 }}>
-          <input
-            type="checkbox"
-            className="toggle"
-            id="custom-alias-toggle"
-            checked={useCustomAlias}
-            onChange={(e) => {
-              setUseCustomAlias(e.target.checked);
-              if (!e.target.checked) {
-                setCustomAlias('');
-                setAliasStatus(null);
-              }
-            }}
-          />
-          <label htmlFor="custom-alias-toggle" className="toggle-label">Use custom alias</label>
+        <div style={{ display: 'flex', gap: 'var(--space-xl)' }}>
+          {/* Custom Alias Toggle */}
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword) ? 'var(--space-md)' : 0 }}>
+            <input
+              type="checkbox"
+              className="toggle"
+              id="custom-alias-toggle"
+              checked={useCustomAlias}
+              onChange={(e) => {
+                setUseCustomAlias(e.target.checked);
+                if (!e.target.checked) {
+                  setCustomAlias('');
+                  setAliasStatus(null);
+                }
+              }}
+            />
+            <label htmlFor="custom-alias-toggle" className="toggle-label">Use custom alias</label>
+          </div>
+
+          {/* Password Toggle */}
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword) ? 'var(--space-md)' : 0 }}>
+            <input
+              type="checkbox"
+              className="toggle"
+              id="password-toggle"
+              checked={usePassword}
+              onChange={(e) => {
+                setUsePassword(e.target.checked);
+                if (!e.target.checked) {
+                  setPassword('');
+                }
+              }}
+            />
+            <label htmlFor="password-toggle" className="toggle-label">Password protection</label>
+          </div>
         </div>
 
-        {/* Custom Alias Input */}
-        {useCustomAlias && (
-          <div className="input-group" style={{ animation: 'slideUp 0.3s ease' }}>
-            <label htmlFor="alias-input">Custom Alias</label>
-            <input
-              id="alias-input"
-              type="text"
-              className={`input ${
-                aliasStatus === 'available' ? 'input-success' :
-                aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
-              }`}
-              placeholder="my-custom-alias"
-              value={customAlias}
-              onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-              maxLength={30}
-            />
-            {aliasStatus === 'checking' && <span className="helper-text">⏳ Checking availability...</span>}
-            {aliasStatus === 'available' && <span className="success-text">✅ {aliasMessage}</span>}
-            {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">❌ {aliasMessage}</span>}
-            {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
-              <span className="helper-text">Minimum 3 characters</span>
+        {/* Advanced Options Inputs */}
+        {(useCustomAlias || usePassword) && (
+          <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap', animation: 'slideUp 0.3s ease' }}>
+            
+            {useCustomAlias && (
+              <div className="input-group" style={{ flex: '1 1 200px' }}>
+                <label htmlFor="alias-input">Custom Alias</label>
+                <input
+                  id="alias-input"
+                  type="text"
+                  className={`input ${
+                    aliasStatus === 'available' ? 'input-success' :
+                    aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
+                  }`}
+                  placeholder="my-custom-alias"
+                  value={customAlias}
+                  onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  maxLength={30}
+                />
+                {aliasStatus === 'checking' && <span className="helper-text">⏳ Checking availability...</span>}
+                {aliasStatus === 'available' && <span className="success-text">✅ {aliasMessage}</span>}
+                {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">❌ {aliasMessage}</span>}
+                {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
+                  <span className="helper-text">Minimum 3 characters</span>
+                )}
+              </div>
             )}
+
+            {usePassword && (
+              <div className="input-group" style={{ flex: '1 1 200px' }}>
+                <label htmlFor="password-input">Password</label>
+                <input
+                  id="password-input"
+                  type="password"
+                  className="input"
+                  placeholder="Enter a secure password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={4}
+                />
+                <span className="helper-text">Requires password to visit</span>
+              </div>
+            )}
+
           </div>
         )}
       </form>

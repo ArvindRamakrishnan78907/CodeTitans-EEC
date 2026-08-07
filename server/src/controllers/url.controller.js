@@ -2,6 +2,8 @@ import { queryAll, queryOne, execute, saveDb } from '../models/db.js';
 import { customAlphabet } from 'nanoid';
 import { isValidUrl, isValidAlias } from '../utils/urlHelpers.js';
 import config from '../config/index.js';
+import bcrypt from 'bcryptjs';
+import { scanUrl } from '../services/malwareScanner.js';
 
 // Base62 nanoid generator
 const generateShortCode = customAlphabet(
@@ -10,11 +12,12 @@ const generateShortCode = customAlphabet(
 );
 
 /**
+/**
  * Create a shortened URL
  */
-export function createShortUrl(req, res) {
+export async function createShortUrl(req, res) {
   try {
-    const { url, customAlias } = req.body;
+    const { url, customAlias, password } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -22,6 +25,12 @@ export function createShortUrl(req, res) {
 
     if (!isValidUrl(url)) {
       return res.status(400).json({ error: 'Invalid URL. Must start with http:// or https://' });
+    }
+
+    // Malware & Threat Detection (ECR-02)
+    const scanResult = await scanUrl(url);
+    if (!scanResult.isSafe) {
+      return res.status(400).json({ error: scanResult.reason });
     }
 
     let shortCode;
@@ -50,9 +59,16 @@ export function createShortUrl(req, res) {
       }
     }
 
+    // Password Protection (ECR-01)
+    let passwordHash = null;
+    if (password && password.trim().length > 0) {
+      const salt = await bcrypt.genSalt(10);
+      passwordHash = await bcrypt.hash(password.trim(), salt);
+    }
+
     const result = execute(
-      'INSERT INTO urls (short_code, original_url, custom_alias) VALUES (?, ?, ?)',
-      [shortCode, url, customAlias ? 1 : 0]
+      'INSERT INTO urls (short_code, original_url, custom_alias, password_hash) VALUES (?, ?, ?, ?)',
+      [shortCode, url, customAlias ? 1 : 0, passwordHash]
     );
     saveDb();
 
@@ -115,7 +131,7 @@ export function getUrlByCode(req, res) {
     const { shortCode } = req.params;
 
     const url = queryOne(
-      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active
+      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active, password_hash
        FROM urls WHERE short_code = ? AND is_active = 1`,
       [shortCode]
     );
@@ -126,6 +142,8 @@ export function getUrlByCode(req, res) {
 
     res.json({
       ...url,
+      isPasswordProtected: !!url.password_hash,
+      password_hash: undefined, // never leak the hash
       shortUrl: `${config.clientUrl}/${url.short_code}`
     });
   } catch (error) {

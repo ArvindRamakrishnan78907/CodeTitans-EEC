@@ -53,6 +53,15 @@ export async function getDb() {
     )
   `);
 
+  // Migration for ECR-01 (Password Protection)
+  try {
+    db.exec("SELECT password_hash FROM urls LIMIT 1");
+  } catch (e) {
+    console.log("Migrating database: adding password_hash column");
+    db.run("ALTER TABLE urls ADD COLUMN password_hash TEXT NULL");
+    saveDb();
+  }
+
   db.run(`
     CREATE TABLE IF NOT EXISTS clicks (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,

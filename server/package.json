@@ -10,6 +10,7 @@
     "db:init": "node database/init.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "nanoid": "^5.0.7",

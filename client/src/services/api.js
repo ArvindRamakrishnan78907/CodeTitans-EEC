@@ -13,9 +13,10 @@ function formatShortUrl(shortCode) {
  */
 const api = {
   // ── URL Shortening ──────────────────────────────
-  async shortenUrl(url, customAlias = null) {
+  async shortenUrl(url, customAlias = null, password = null) {
     const body = { url };
     if (customAlias) body.customAlias = customAlias;
+    if (password) body.password = password;
 
     const res = await fetch(`${API_BASE}/shorten`, {
       method: 'POST',
@@ -26,6 +27,25 @@ const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to shorten URL');
     data.shortUrl = formatShortUrl(data.shortCode);
+    return data;
+  },
+
+  async getUrl(shortCode) {
+    const res = await fetch(`${API_BASE}/urls/${shortCode}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    data.shortUrl = formatShortUrl(data.shortCode);
+    return data;
+  },
+
+  async verifyPassword(shortCode, password) {
+    const res = await fetch(`${API_BASE}/urls/${shortCode}/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Verification failed');
     return data;
   },
 

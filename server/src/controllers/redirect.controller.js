@@ -2,6 +2,57 @@ import { queryOne, execute, saveDb } from '../models/db.js';
 import UAParser from 'ua-parser-js';
 import config from '../config/index.js';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+
+/**
+ * Verify password for a protected link
+ */
+export async function verifyPassword(req, res) {
+  try {
+    const { shortCode } = req.params;
+    const { password } = req.body;
+
+    const url = queryOne(
+      'SELECT id, original_url, password_hash, is_active, expires_at FROM urls WHERE short_code = ?',
+      [shortCode]
+    );
+
+    if (!url || !url.is_active) {
+      return res.status(404).json({ error: 'Link not found or has been deactivated' });
+    }
+
+    if (url.expires_at && new Date(url.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This link has expired' });
+    }
+
+    if (!url.password_hash) {
+      return res.status(400).json({ error: 'This link is not password protected' });
+    }
+
+    const isMatch = await bcrypt.compare(password, url.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+
+    // Log click asynchronously
+    setImmediate(() => {
+      try {
+        logClick(url.id, req);
+      } catch (e) {
+        console.error('Error logging click:', e);
+      }
+    });
+
+    // Increment click count
+    execute('UPDATE urls SET click_count = click_count + 1 WHERE id = ?', [url.id]);
+    saveDb();
+
+    res.json({ originalUrl: url.original_url });
+  } catch (error) {
+    console.error('Error verifying password:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
 
 /**
  * Redirect short code to original URL + log click
