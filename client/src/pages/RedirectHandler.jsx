@@ -93,14 +93,19 @@ export default function RedirectHandler() {
   }
 
   // Fallback error state if not loading and not needing password (e.g. 404 or 410 Expired)
-  const isExpired = error && (error.includes('expired') || error.includes('click limit'));
+  const isExpired = error && (error.toLowerCase().includes('expired') || error.toLowerCase().includes('limit'));
   
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center', border: `1px solid ${isExpired ? 'var(--border-default)' : 'var(--accent-error)'}` }}>
-        <h2 style={{ marginBottom: '0.5rem' }}>{isExpired ? 'Link Expired' : 'Link Unavailable'}</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>{error || 'The link you are trying to access does not exist.'}</p>
-        <button onClick={() => navigate('/')} className="btn btn-secondary" style={{ marginTop: '1.5rem', width: '100%' }}>
+      <div className="card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center', padding: 'var(--space-2xl)' }}>
+        <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>{isExpired ? '⏳' : '🔒'}</div>
+        <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}>
+          {isExpired ? 'Link Expired' : 'Link Unavailable'}
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          {error || 'The link you are trying to access does not exist or has been deactivated.'}
+        </p>
+        <button onClick={() => navigate('/')} className="btn btn-primary" style={{ width: '100%', padding: '12px 20px', borderRadius: '12px' }}>
           Go to Homepage
         </button>
       </div>

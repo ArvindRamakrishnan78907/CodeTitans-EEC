@@ -61,6 +61,71 @@ export async function verifyPassword(req, res) {
 /**
  * Redirect short code to original URL + log click
  */
+function sendErrorResponse(req, res, status, title, message) {
+  if (req.accepts('html')) {
+    return res.status(status).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title} — SnipLink</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+          body {
+            font-family: 'Outfit', sans-serif;
+            background: #050505;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .card {
+            background: rgba(25, 25, 25, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+          }
+          .icon { font-size: 3rem; margin-bottom: 16px; }
+          h1 { font-size: 1.5rem; margin: 0 0 10px 0; font-weight: 700; }
+          p { color: rgba(255,255,255,0.7); font-size: 0.95rem; margin: 0 0 24px 0; line-height: 1.5; }
+          .btn {
+            display: inline-block;
+            background: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: transform 0.2s;
+          }
+          .btn:hover { transform: translateY(-2px); }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">${status === 410 ? '⏳' : '🔍'}</div>
+          <h1>${title}</h1>
+          <p>${message}</p>
+          <a href="${config.clientUrl}" class="btn">Go to SnipLink Homepage</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+  return res.status(status).json({ error: message });
+}
+
 export function redirectToOriginal(req, res) {
   try {
     const { shortCode } = req.params;
@@ -71,16 +136,17 @@ export function redirectToOriginal(req, res) {
     );
 
     if (!url || !url.is_active) {
-      return res.status(404).json({ error: 'Link not found or has been deactivated' });
+      return sendErrorResponse(req, res, 404, 'Link Not Found', 'The link you are trying to access does not exist or has been deactivated.');
     }
 
-    // Check expiration
+    // Check expiration by date
     if (url.expires_at && new Date(url.expires_at) < new Date()) {
-      return res.status(410).json({ error: 'This link has expired by date' });
+      return sendErrorResponse(req, res, 410, 'Link Expired by Date', 'This short link has expired as its set expiration date has passed.');
     }
 
+    // Check expiration by max clicks
     if (url.max_clicks !== null && url.click_count >= url.max_clicks) {
-      return res.status(410).json({ error: 'This link has reached its maximum click limit' });
+      return sendErrorResponse(req, res, 410, 'Click Limit Reached', 'This short link has reached its maximum allowed click limit.');
     }
 
     // Log click asynchronously
@@ -100,7 +166,7 @@ export function redirectToOriginal(req, res) {
     res.redirect(302, url.original_url);
   } catch (error) {
     console.error('Error redirecting:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendErrorResponse(req, res, 500, 'Server Error', 'An error occurred while processing your redirect request.');
   }
 }
 

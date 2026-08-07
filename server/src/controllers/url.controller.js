@@ -140,7 +140,17 @@ export function getUrlByCode(req, res) {
     );
 
     if (!url) {
-      return res.status(404).json({ error: 'URL not found' });
+      return res.status(404).json({ error: 'URL not found or has been deactivated' });
+    }
+
+    // Check expiration by date
+    if (url.expires_at && new Date(url.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'This link has expired by date' });
+    }
+
+    // Check expiration by max clicks
+    if (url.max_clicks !== null && url.click_count >= url.max_clicks) {
+      return res.status(410).json({ error: 'This link has reached its maximum click limit' });
     }
 
     res.json({
