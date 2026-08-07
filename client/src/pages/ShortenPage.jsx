@@ -15,6 +15,7 @@ export default function ShortenPage({ addToast }) {
   const [utmSource, setUtmSource] = useState('');
   const [utmMedium, setUtmMedium] = useState('');
   const [utmCampaign, setUtmCampaign] = useState('');
+  const [useUtm, setUseUtm] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [aliasStatus, setAliasStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
   const [aliasMessage, setAliasMessage] = useState('');
@@ -205,9 +206,10 @@ export default function ShortenPage({ addToast }) {
         <div className={`accordion-content ${isAdvancedOpen ? 'open' : ''}`}>
           <div className="advanced-grid">
             
-            {/* Toggles Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-              <div className="toggle-container">
+            {/* Custom Alias Card */}
+            <div className="config-card">
+              <div className="config-header">
+                <label htmlFor="custom-alias-toggle" style={{ fontWeight: 500, cursor: 'pointer' }}>Custom Alias</label>
                 <input
                   type="checkbox"
                   className="toggle"
@@ -221,10 +223,32 @@ export default function ShortenPage({ addToast }) {
                     }
                   }}
                 />
-                <label htmlFor="custom-alias-toggle" className="toggle-label">Use custom alias</label>
               </div>
+              {useCustomAlias && (
+                <div className="config-body">
+                  <input
+                    type="text"
+                    className={`input ${
+                      aliasStatus === 'available' ? 'input-success' :
+                      aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
+                    }`}
+                    placeholder="my-custom-alias"
+                    value={customAlias}
+                    onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    maxLength={30}
+                    style={{ width: '100%' }}
+                  />
+                  {aliasStatus === 'checking' && <div className="helper-text" style={{ marginTop: '4px' }}>Checking availability...</div>}
+                  {aliasStatus === 'available' && <div className="success-text" style={{ marginTop: '4px' }}>{aliasMessage}</div>}
+                  {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <div className="error-text" style={{ marginTop: '4px' }}>{aliasMessage}</div>}
+                </div>
+              )}
+            </div>
 
-              <div className="toggle-container">
+            {/* Password Protection Card */}
+            <div className="config-card">
+              <div className="config-header">
+                <label htmlFor="password-toggle" style={{ fontWeight: 500, cursor: 'pointer' }}>Password Protection</label>
                 <input
                   type="checkbox"
                   className="toggle"
@@ -235,10 +259,26 @@ export default function ShortenPage({ addToast }) {
                     if (!e.target.checked) setPassword('');
                   }}
                 />
-                <label htmlFor="password-toggle" className="toggle-label">Password protection</label>
               </div>
+              {usePassword && (
+                <div className="config-body">
+                  <input
+                    type="password"
+                    className="input"
+                    placeholder="Enter a secure password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={4}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              )}
+            </div>
 
-              <div className="toggle-container">
+            {/* Expiration Date Card */}
+            <div className="config-card">
+              <div className="config-header">
+                <label htmlFor="expiry-toggle" style={{ fontWeight: 500, cursor: 'pointer' }}>Expiration Date</label>
                 <input
                   type="checkbox"
                   className="toggle"
@@ -249,10 +289,25 @@ export default function ShortenPage({ addToast }) {
                     if (!e.target.checked) setExpiresAt('');
                   }}
                 />
-                <label htmlFor="expiry-toggle" className="toggle-label">Set expiration date</label>
               </div>
+              {useExpiry && (
+                <div className="config-body">
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={expiresAt}
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              )}
+            </div>
 
-              <div className="toggle-container">
+            {/* Click Limit Card */}
+            <div className="config-card">
+              <div className="config-header">
+                <label htmlFor="max-clicks-toggle" style={{ fontWeight: 500, cursor: 'pointer' }}>Maximum Clicks Limit</label>
                 <input
                   type="checkbox"
                   className="toggle"
@@ -263,114 +318,57 @@ export default function ShortenPage({ addToast }) {
                     if (!e.target.checked) setMaxClicks('');
                   }}
                 />
-                <label htmlFor="max-clicks-toggle" className="toggle-label">Limit total clicks</label>
               </div>
-            </div>
-
-            {/* Inputs Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-              {useCustomAlias && (
-                <div className="input-group">
-                  <label htmlFor="alias-input">Custom Alias</label>
-                  <input
-                    id="alias-input"
-                    type="text"
-                    className={`input ${
-                      aliasStatus === 'available' ? 'input-success' :
-                      aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
-                    }`}
-                    placeholder="my-custom-alias"
-                    value={customAlias}
-                    onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    maxLength={30}
-                  />
-                  {aliasStatus === 'checking' && <span className="helper-text">Checking availability...</span>}
-                  {aliasStatus === 'available' && <span className="success-text">{aliasMessage}</span>}
-                  {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">{aliasMessage}</span>}
-                  {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
-                    <span className="helper-text">Minimum 3 characters</span>
-                  )}
-                </div>
-              )}
-
-              {usePassword && (
-                <div className="input-group">
-                  <label htmlFor="password-input">Password</label>
-                  <input
-                    id="password-input"
-                    type="password"
-                    className="input"
-                    placeholder="Enter a secure password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    minLength={4}
-                  />
-                  <span className="helper-text">Requires password to visit</span>
-                </div>
-              )}
-
-              {useExpiry && (
-                <div className="input-group">
-                  <label htmlFor="expiry-input">Expiration Date & Time</label>
-                  <input
-                    id="expiry-input"
-                    type="datetime-local"
-                    className="input"
-                    value={expiresAt}
-                    min={new Date().toISOString().slice(0, 16)}
-                    onChange={(e) => setExpiresAt(e.target.value)}
-                  />
-                </div>
-              )}
-
               {useMaxClicks && (
-                <div className="input-group">
-                  <label htmlFor="max-clicks-input">Maximum Clicks</label>
+                <div className="config-body">
                   <input
-                    id="max-clicks-input"
                     type="number"
                     className="input"
                     placeholder="e.g. 100"
                     value={maxClicks}
                     min={1}
                     onChange={(e) => setMaxClicks(e.target.value)}
+                    style={{ width: '100%' }}
                   />
                 </div>
               )}
             </div>
-            
-            {/* UTM Builder Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-              <div className="input-group">
-                <label>UTM Campaign (optional)</label>
+
+            {/* UTM Tag Builder Card */}
+            <div className="config-card" style={{ gridColumn: '1 / -1' }}>
+              <div className="config-header">
+                <label htmlFor="utm-toggle" style={{ fontWeight: 500, cursor: 'pointer' }}>UTM Tag Builder (Analytics)</label>
                 <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. summer_sale"
-                  value={utmCampaign}
-                  onChange={(e) => setUtmCampaign(e.target.value)}
+                  type="checkbox"
+                  className="toggle"
+                  id="utm-toggle"
+                  checked={useUtm}
+                  onChange={(e) => {
+                    setUseUtm(e.target.checked);
+                    if (!e.target.checked) {
+                      setUtmSource('');
+                      setUtmMedium('');
+                      setUtmCampaign('');
+                    }
+                  }}
                 />
               </div>
-              <div className="input-group">
-                <label>UTM Source (optional)</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. twitter, newsletter"
-                  value={utmSource}
-                  onChange={(e) => setUtmSource(e.target.value)}
-                />
-              </div>
-              <div className="input-group">
-                <label>UTM Medium (optional)</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. social, email"
-                  value={utmMedium}
-                  onChange={(e) => setUtmMedium(e.target.value)}
-                />
-              </div>
+              {useUtm && (
+                <div className="config-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Campaign</label>
+                    <input type="text" className="input" placeholder="e.g. summer_sale" value={utmCampaign} onChange={(e) => setUtmCampaign(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Source</label>
+                    <input type="text" className="input" placeholder="e.g. newsletter" value={utmSource} onChange={(e) => setUtmSource(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Medium</label>
+                    <input type="text" className="input" placeholder="e.g. email" value={utmMedium} onChange={(e) => setUtmMedium(e.target.value)} style={{ width: '100%' }} />
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
