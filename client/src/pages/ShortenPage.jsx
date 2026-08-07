@@ -43,6 +43,18 @@ export default function ShortenPage({ addToast }) {
     loadHistory();
   }, [loadHistory]);
 
+  // Keyboard shortcut listener (Ctrl+K or / to focus URL input)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('url-input')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Debounced alias check
   useEffect(() => {
     if (!useCustomAlias || !customAlias || customAlias.length < 3) {

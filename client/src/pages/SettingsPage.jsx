@@ -6,6 +6,8 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
   const [defaultMaxClicks, setDefaultMaxClicks] = useState(() => localStorage.getItem('sniplink_default_clicks') || '');
   const [customDomain, setCustomDomain] = useState(() => localStorage.getItem('sniplink_custom_domain') || '');
   const [exporting, setExporting] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
+  const [activeDocTab, setActiveDocTab] = useState('api'); // 'api' | 'features' | 'shortcuts'
 
   useEffect(() => {
     localStorage.setItem('sniplink_default_expiry', defaultExpiry);
@@ -86,14 +88,19 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
     }
   };
 
+  const handleCopyCurl = (code) => {
+    navigator.clipboard.writeText(code);
+    if (addToast) addToast('cURL command copied to clipboard! 📋', 'success');
+  };
+
   return (
     <div>
       <div className="page-header">
         <h2>⚙️ Settings & Preferences</h2>
-        <p>Customize your workspace theme, default preferences, and export your data</p>
+        <p>Customize your workspace theme, default preferences, export your data, and view documentation</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', maxWidth: '720px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', maxWidth: '760px' }}>
         
         {/* Appearance Section */}
         <div className="card">
@@ -105,8 +112,6 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
-            
-            {/* Dark Theme Card */}
             <div 
               className="config-card"
               style={{
@@ -121,7 +126,6 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Deep glassmorphic dark theme</div>
             </div>
 
-            {/* Light Theme Card */}
             <div 
               className="config-card"
               style={{
@@ -135,7 +139,6 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '4px' }}>Light Mode</div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>Clean, high-contrast light theme</div>
             </div>
-
           </div>
         </div>
 
@@ -197,6 +200,140 @@ export default function SettingsPage({ currentTheme, onThemeChange, addToast }) 
               Save Prefix
             </button>
           </div>
+        </div>
+
+        {/* Interactive Documentation Section */}
+        <div className="card">
+          <div className="flex items-center justify-between" style={{ cursor: 'pointer' }} onClick={() => setShowDocs(!showDocs)}>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                📖 Documentation & API Guide
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                REST API endpoints, cURL examples, keyboard shortcuts, and feature usage instructions
+              </p>
+            </div>
+            <button className="action-btn" style={{ padding: '6px 12px' }}>
+              {showDocs ? '▲ Hide Docs' : '▼ View Docs'}
+            </button>
+          </div>
+
+          {showDocs && (
+            <div style={{ marginTop: 'var(--space-lg)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--border-default)' }}>
+              
+              {/* Doc Tabs */}
+              <div className="mode-tabs">
+                <button 
+                  className={`tab-btn ${activeDocTab === 'api' ? 'active' : ''}`}
+                  onClick={() => setActiveDocTab('api')}
+                >
+                  ⚡ REST API Guide
+                </button>
+                <button 
+                  className={`tab-btn ${activeDocTab === 'features' ? 'active' : ''}`}
+                  onClick={() => setActiveDocTab('features')}
+                >
+                  🛠️ Feature Specs
+                </button>
+                <button 
+                  className={`tab-btn ${activeDocTab === 'shortcuts' ? 'active' : ''}`}
+                  onClick={() => setActiveDocTab('shortcuts')}
+                >
+                  ⌨️ Shortcuts
+                </button>
+              </div>
+
+              {/* API Tab Content */}
+              {activeDocTab === 'api' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                  
+                  {/* Endpoint 1 */}
+                  <div className="config-card">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span className="short-pill" style={{ background: '#2563eb', color: '#fff', border: 'none' }}>POST</span>
+                      <code style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>/api/shorten</code>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                      Shorten a long URL with optional custom alias, password, expiry, or max clicks.
+                    </p>
+                    <div style={{ background: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '8px', position: 'relative' }}>
+                      <pre style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'var(--font-mono)', overflowX: 'auto' }}>
+{`curl -X POST http://localhost:3001/api/shorten \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://example.com", "customAlias": "mybrand"}'`}
+                      </pre>
+                      <button 
+                        className="action-btn"
+                        style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 8px', fontSize: '0.75rem' }}
+                        onClick={() => handleCopyCurl(`curl -X POST http://localhost:3001/api/shorten -H "Content-Type: application/json" -d '{"url": "https://example.com", "customAlias": "mybrand"}'`)}
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Endpoint 2 */}
+                  <div className="config-card">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span className="short-pill" style={{ background: '#16a34a', color: '#fff', border: 'none' }}>GET</span>
+                      <code style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>/api/qr/:shortCode</code>
+                    </div>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                      Generate high-resolution PNG or SVG QR code with ECC Level H fault tolerance.
+                    </p>
+                    <div style={{ background: 'var(--bg-tertiary)', padding: '10px 14px', borderRadius: '8px', position: 'relative' }}>
+                      <pre style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'var(--font-mono)', overflowX: 'auto' }}>
+{`curl "http://localhost:3001/api/qr/mybrand/data?targetMode=direct"`}
+                      </pre>
+                      <button 
+                        className="action-btn"
+                        style={{ position: 'absolute', top: '8px', right: '8px', padding: '4px 8px', fontSize: '0.75rem' }}
+                        onClick={() => handleCopyCurl(`curl "http://localhost:3001/api/qr/mybrand/data?targetMode=direct"`)}
+                      >
+                        📋 Copy
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Feature Specs Tab Content */}
+              {activeDocTab === 'features' && (
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div className="config-card">
+                    <strong style={{ color: 'var(--text-primary)' }}>🔐 Password Protection & Rate Limiting:</strong>
+                    <p style={{ marginTop: '4px' }}>Protected links require password verification before redirecting. The `/verify` endpoint is rate-limited to 5 requests per minute to prevent brute-force attacks.</p>
+                  </div>
+                  <div className="config-card">
+                    <strong style={{ color: 'var(--text-primary)' }}>⏳ Expiration & Click Limits:</strong>
+                    <p style={{ marginTop: '4px' }}>Links can expire by timestamp or when max clicks are reached. Expired links display a styled Error Card instead of raw JSON.</p>
+                  </div>
+                  <div className="config-card">
+                    <strong style={{ color: 'var(--text-primary)' }}>🎨 QR Logo Overlay Engine:</strong>
+                    <p style={{ marginTop: '4px' }}>Center logos use canvas compositing with Error Correction Level H (30% fault tolerance), ensuring 100% scannability on phone cameras.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Keyboard Shortcuts Tab Content */}
+              {activeDocTab === 'shortcuts' && (
+                <div className="config-card" style={{ fontSize: '0.875rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', alignItems: 'center' }}>
+                    <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>Ctrl / Cmd + K</code>
+                    <span>Focus long URL input box instantly</span>
+                    
+                    <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>Ctrl + Enter</code>
+                    <span>Submit URL shortening form</span>
+
+                    <code style={{ background: 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '4px', textAlign: 'center' }}>Esc</code>
+                    <span>Close open drawers or customizers</span>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
         </div>
 
         {/* Data Backup & Maintenance */}
