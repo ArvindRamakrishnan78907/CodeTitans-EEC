@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api.js';
 import { useCopy } from '../hooks/useToast.js';
 
 export default function ShortenPage({ addToast }) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [url, setUrl] = useState('');
   const [customAlias, setCustomAlias] = useState('');
   const [useCustomAlias, setUseCustomAlias] = useState(false);
@@ -411,9 +414,25 @@ export default function ShortenPage({ addToast }) {
 
       {/* URL History */}
       <div className="card" style={{ marginTop: 'var(--space-xl)' }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>📜 Recent Links</h3>
-          <span className="badge badge-primary">{history.length} links</span>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+          <div className="flex items-center gap-sm">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 700 }}>📜 Recent Links</h3>
+            <span className="click-badge" style={{ fontSize: '0.85rem' }}>{history.length} links</span>
+          </div>
+
+          {/* Search bar */}
+          {history.length > 0 && (
+            <div style={{ maxWidth: '280px', width: '100%' }}>
+              <input
+                type="text"
+                className="input"
+                placeholder="🔍 Search recent links..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ padding: '8px 12px', fontSize: '0.85rem' }}
+              />
+            </div>
+          )}
         </div>
 
         {history.length === 0 ? (
@@ -423,62 +442,78 @@ export default function ShortenPage({ addToast }) {
             <p>Shorten your first URL to see it here</p>
           </div>
         ) : (
-          <table className="url-table">
-            <thead>
-              <tr>
-                <th>Short URL</th>
-                <th>Original URL</th>
-                <th>Clicks</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((item) => (
-                <tr key={item.short_code} style={{ animation: 'fadeIn 0.3s ease' }}>
-                  <td>
-                    <span
-                      className="short-code"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => handleCopy(item.shortUrl)}
-                      title="Click to copy"
-                    >
-                      /{item.short_code}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="original-url" title={item.original_url}>
-                      {truncateUrl(item.original_url)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="click-count">{item.click_count}</span>
-                  </td>
-                  <td style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
-                    {formatDate(item.created_at)}
-                  </td>
-                  <td>
-                    <div className="flex gap-sm">
-                      <button
-                        className="btn btn-ghost btn-sm"
+          <div className="url-list">
+            {history
+              .filter(item => 
+                item.short_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                item.original_url.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((item) => (
+                <div key={item.short_code} className="url-item-card">
+                  <div className="url-item-row">
+                    <div className="url-item-left">
+                      <span
+                        className="short-pill"
                         onClick={() => handleCopy(item.shortUrl)}
-                        title="Copy"
+                        title="Click to copy short link"
                       >
-                        📋
+                        /{item.short_code}
+                      </span>
+                      <span className="click-badge">
+                        🔥 {item.click_count} {item.click_count === 1 ? 'click' : 'clicks'}
+                      </span>
+                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>
+                        {formatDate(item.created_at)}
+                      </span>
+                    </div>
+
+                    <div className="url-item-actions">
+                      <button
+                        className="action-btn"
+                        onClick={() => handleCopy(item.shortUrl)}
+                        title="Copy short link"
+                      >
+                        📋 Copy
+                      </button>
+                      <a
+                        href={item.original_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="action-btn"
+                        title="Visit original URL"
+                      >
+                        ↗️ Open
+                      </a>
+                      <button
+                        className="action-btn"
+                        onClick={() => navigate('/qr')}
+                        title="Generate QR code"
+                      >
+                        📱 QR
                       </button>
                       <button
-                        className="btn btn-ghost btn-sm"
+                        className="action-btn"
+                        onClick={() => navigate('/analytics')}
+                        title="View analytics"
+                      >
+                        📊 Stats
+                      </button>
+                      <button
+                        className="action-btn action-btn-danger"
                         onClick={() => handleDelete(item.short_code)}
-                        title="Delete"
+                        title="Delete link"
                       >
                         🗑️
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+
+                  <div className="url-item-original" title={item.original_url}>
+                    🔗 {item.original_url}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+          </div>
         )}
       </div>
     </div>
