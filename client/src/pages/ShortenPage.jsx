@@ -522,58 +522,57 @@ export default function ShortenPage({ addToast }) {
 
       {/* Result Card */}
       {result && (
-        <div className="card" style={{ marginBottom: 'var(--space-xl)', border: '1px solid #32d74b', background: 'rgba(50, 215, 75, 0.05)', padding: 'var(--space-xl)' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
-            <div className="flex items-center gap-sm">
-              <span className="health-badge health-badge-ok" style={{ background: '#32d74b', color: '#000', fontWeight: 700, padding: '4px 10px' }}>
-                Shortened Link Ready
-              </span>
-              <span className="health-badge health-badge-ok" style={{ padding: '4px 10px' }}>
-                Verified Safe
-              </span>
-              {result.tag && (
-                <span className="click-badge" style={{ background: 'var(--accent-secondary)', color: 'var(--accent-primary)', fontWeight: 600 }}>
-                  {result.tag}
-                </span>
+        <div className="card" style={{ marginBottom: 'var(--space-xl)', padding: '16px 20px', border: '1px solid var(--border-strong)' }}>
+          <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+            <div className="flex items-center gap-md" style={{ flex: 1, minWidth: '260px', overflow: 'hidden' }}>
+              {qrData && (
+                <img 
+                  src={qrData} 
+                  alt="QR Code" 
+                  onClick={() => navigate('/qr')} 
+                  title="Click to customize QR code" 
+                  style={{ width: '48px', height: '48px', borderRadius: '6px', cursor: 'pointer', background: '#fff', padding: '2px', flexShrink: 0 }} 
+                />
               )}
-              {result.customAlias && <span className="click-badge">Custom Alias</span>}
-            </div>
-            <button className="action-btn" onClick={() => setResult(null)} style={{ fontSize: '0.8rem' }}>
-              Dismiss
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)', flexWrap: 'wrap', marginBottom: 'var(--space-md)', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
-            <div style={{ wordBreak: 'break-all', fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-              <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>
-                {result.shortUrl}
-              </a>
-            </div>
-            <button
-              className={`btn ${copied ? 'btn-success' : 'btn-primary'}`}
-              onClick={() => handleCopy(result.shortUrl)}
-              style={{ padding: '10px 20px', fontSize: '0.9rem' }}
-            >
-              {copied ? 'Copied to Clipboard!' : 'Copy Short Link'}
-            </button>
-          </div>
-
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', wordBreak: 'break-all' }}>
-            <strong>Destination: </strong> {result.originalUrl}
-          </div>
-
-          {qrData && (
-            <div className="flex items-center gap-md" style={{ background: 'var(--bg-tertiary)', padding: '16px', borderRadius: '12px', flexWrap: 'wrap' }}>
-              <img src={qrData} alt="QR Code" style={{ width: '96px', height: '96px', borderRadius: '8px', background: '#fff', padding: '4px' }} />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>Center Logo QR Code Included</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Scan directly with any phone camera to visit destination</div>
-                <button className="action-btn" onClick={() => navigate('/qr')}>
-                  Customize QR Branding
-                </button>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="flex items-center gap-sm" style={{ marginBottom: '2px' }}>
+                  <a 
+                    href={result.shortUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none', fontFamily: 'var(--font-mono)' }}
+                  >
+                    {result.shortUrl}
+                  </a>
+                  {result.tag && (
+                    <span className="click-badge" style={{ fontSize: '0.75rem' }}>
+                      {result.tag}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {result.originalUrl}
+                </div>
               </div>
             </div>
-          )}
+
+            <div className="flex items-center gap-sm">
+              <button
+                className={`btn btn-sm ${copied ? 'btn-success' : 'btn-primary'}`}
+                onClick={() => handleCopy(result.shortUrl)}
+              >
+                {copied ? 'Copied' : 'Copy link'}
+              </button>
+              <button 
+                className="action-btn" 
+                onClick={() => setResult(null)} 
+                title="Dismiss"
+                style={{ padding: '6px 10px', fontSize: '1rem', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
