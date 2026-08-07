@@ -47,7 +47,7 @@ export default function RedirectHandler() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', margin: 0, padding: 0 }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>⭘</div>
           <h2 style={{ marginTop: '1rem' }}>Redirecting...</h2>
@@ -67,12 +67,12 @@ export default function RedirectHandler() {
 
   if (needsPassword) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-        <form onSubmit={handlePasswordSubmit} className="card card-gradient" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-          <h2>Protected Link</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>This link requires a password to access.</p>
+      <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', padding: '1rem', margin: 0 }}>
+        <form onSubmit={handlePasswordSubmit} className="card" style={{ maxWidth: '420px', width: '100%', textAlign: 'center', padding: '32px 24px', boxShadow: 'var(--shadow-lg)' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px' }}>Protected Link</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '24px' }}>This link requires a password to access.</p>
           
-          <div className="input-group" style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+          <div className="input-group" style={{ textAlign: 'left', marginBottom: '20px' }}>
             <input 
               type="password" 
               className="input input-lg" 
@@ -80,8 +80,9 @@ export default function RedirectHandler() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
+              style={{ width: '100%' }}
             />
-            {error && <span className="error-text" style={{ marginTop: '0.5rem' }}>{error}</span>}
+            {error && <span className="error-text" style={{ marginTop: '8px', display: 'block', color: 'var(--accent-error)', fontSize: '0.85rem' }}>{error}</span>}
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={verifying || !password}>
@@ -96,8 +97,8 @@ export default function RedirectHandler() {
   const isExpired = error && (error.toLowerCase().includes('expired') || error.toLowerCase().includes('limit'));
   
   return (
-    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div className="card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center', padding: 'var(--space-2xl)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', padding: '1rem', margin: 0 }}>
+      <div className="card" style={{ maxWidth: '440px', width: '100%', textAlign: 'center', padding: 'var(--space-2xl)', boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--accent-error)' }}>—</div>
         <h2 style={{ marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 700 }}>
           {isExpired ? 'Link Expired' : 'Link Unavailable'}
