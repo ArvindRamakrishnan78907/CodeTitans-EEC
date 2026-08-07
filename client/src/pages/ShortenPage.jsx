@@ -624,8 +624,8 @@ export default function ShortenPage({ addToast }) {
                       </button>
                       <button
                         className="action-btn"
-                        onClick={() => navigate('/analytics')}
-                        title="View analytics"
+                        onClick={() => navigate(`/analytics?code=${item.short_code}`)}
+                        title="View real-time analytics"
                       >
                         📊 Stats
                       </button>

@@ -32,15 +32,34 @@ export default function AnalyticsPage({ addToast }) {
   const [analytics, setAnalytics] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isLive, setIsLive] = useState(true);
   const [urls, setUrls] = useState([]);
 
-  // Load dashboard stats and URL list
+  // Load URL query param pre-selection on mount
   useEffect(() => {
     loadDashboard();
     loadUrls();
+    const params = new URLSearchParams(window.location.search);
+    const codeParam = params.get('code');
+    if (codeParam) {
+      setShortCode(codeParam);
+      loadAnalytics(codeParam, '7d');
+    }
   }, []);
 
-  const loadDashboard = async () => {
+  // Real-Time Live Polling (3 seconds)
+  useEffect(() => {
+    if (!isLive) return;
+    const interval = setInterval(() => {
+      loadDashboard(true);
+      if (shortCode) {
+        loadAnalytics(shortCode, range, true);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isLive, shortCode, range]);
+
+  const loadDashboard = async (silent = false) => {
     try {
       const data = await api.getDashboardStats();
       setDashboardStats(data);
@@ -58,17 +77,17 @@ export default function AnalyticsPage({ addToast }) {
     }
   };
 
-  const loadAnalytics = async (code, r) => {
+  const loadAnalytics = async (code, r, silent = false) => {
     if (!code) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const data = await api.getAnalytics(code, r);
       setAnalytics(data);
     } catch (error) {
-      addToast(error.message, 'error');
+      if (!silent) addToast(error.message, 'error');
       setAnalytics(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -217,9 +236,21 @@ export default function AnalyticsPage({ addToast }) {
 
   return (
     <div>
-      <div className="page-header">
-        <h2>📊 Analytics</h2>
-        <p>Track clicks, referrers, devices, and more for your shortened links</p>
+      <div className="page-header flex items-center justify-between" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div>
+          <h2>📊 Real-Time Analytics</h2>
+          <p>Track click statistics, geographic trends, and referrer sources in real time</p>
+        </div>
+
+        {/* Live Real-time Indicator Toggle */}
+        <button 
+          className={`action-btn ${isLive ? 'btn-primary' : ''}`}
+          onClick={() => setIsLive(!isLive)}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 14px' }}
+        >
+          <span className={isLive ? "pulse-dot" : ""} style={{ background: isLive ? '#22c55e' : '#a1a1aa' }} />
+          {isLive ? '🟢 LIVE REAL-TIME (3s Sync)' : '⏸️ Live Sync Paused'}
+        </button>
       </div>
 
       {/* Dashboard Stats */}
@@ -338,18 +369,32 @@ export default function AnalyticsPage({ addToast }) {
             </div>
           </div>
 
-          {/* Top Referrers */}
-          <div className="chart-container" style={{ marginTop: 'var(--space-lg)' }}>
-            <div className="chart-header">
-              <span className="chart-title">🔗 Top Referrers</span>
+          {/* Top Referrers with Animated Progress Bars */}
+          <div className="chart-container" style={{ marginTop: 'var(--space-lg)', padding: 'var(--space-xl)' }}>
+            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
+              <span className="chart-title" style={{ fontSize: '1.1rem', fontWeight: 700 }}>🔗 Top Referrer Distribution</span>
             </div>
-            <div style={{ height: '250px' }}>
-              {referrerChartData && referrerChartData.labels.length > 0 ? (
-                <Bar data={referrerChartData} options={barOptions} />
-              ) : (
-                <div className="empty-state"><p>No referrer data</p></div>
-              )}
-            </div>
+            {analytics?.referrers && analytics.referrers.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                {analytics.referrers.map((ref) => {
+                  const maxCount = Math.max(...analytics.referrers.map(r => r.count), 1);
+                  const percentage = Math.round((ref.count / maxCount) * 100);
+                  return (
+                    <div key={ref.referrer} style={{ background: 'var(--bg-tertiary)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
+                      <div className="flex items-center justify-between" style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                        <span>🌐 {ref.referrer}</span>
+                        <span>{ref.count} {ref.count === 1 ? 'click' : 'clicks'} ({percentage}%)</span>
+                      </div>
+                      <div className="progress-container">
+                        <div className="progress-fill" style={{ width: `${percentage}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state"><p>No referrer data recorded yet</p></div>
+            )}
           </div>
         </>
       )}
