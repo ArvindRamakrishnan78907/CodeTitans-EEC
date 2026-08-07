@@ -56,7 +56,7 @@ export function createShortUrl(req, res) {
     );
     saveDb();
 
-    const shortUrl = `${config.baseUrl}/${shortCode}`;
+    const shortUrl = `${config.baseUrl}/r/${shortCode}`;
 
     res.status(201).json({
       id: result.lastInsertRowid,
@@ -92,7 +92,7 @@ export function getAllUrls(req, res) {
     res.json({
       urls: urls.map(u => ({
         ...u,
-        shortUrl: `${config.baseUrl}/${u.short_code}`
+        shortUrl: `${config.baseUrl}/r/${u.short_code}`
       })),
       pagination: {
         page,
@@ -126,7 +126,7 @@ export function getUrlByCode(req, res) {
 
     res.json({
       ...url,
-      shortUrl: `${config.baseUrl}/${url.short_code}`
+      shortUrl: `${config.baseUrl}/r/${url.short_code}`
     });
   } catch (error) {
     console.error('Error fetching URL:', error);

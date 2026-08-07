@@ -5,7 +5,13 @@ import { fileURLToPath } from 'url';
 import config from '../config/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_FILE = path.resolve(__dirname, '../../', config.dbPath);
+
+// In serverless (Netlify), use /tmp for writable storage
+// In local dev, use the project database directory
+const isServerless = process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+const DB_FILE = isServerless
+  ? '/tmp/urlshortener.db'
+  : path.resolve(__dirname, '../../', config.dbPath);
 
 let db = null;
 
@@ -73,7 +79,7 @@ export async function getDb() {
   // Save to file
   saveDb();
 
-  console.log('✅ Database initialized');
+  console.log(`✅ Database initialized (${isServerless ? 'serverless' : 'local'})`);
   return db;
 }
 
@@ -82,9 +88,13 @@ export async function getDb() {
  */
 export function saveDb() {
   if (db) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(DB_FILE, buffer);
+    try {
+      const data = db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(DB_FILE, buffer);
+    } catch (e) {
+      console.error('Error saving DB:', e);
+    }
   }
 }
 

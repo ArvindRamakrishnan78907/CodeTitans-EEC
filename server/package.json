@@ -10,11 +10,12 @@
     "db:init": "node database/init.js"
   },
   "dependencies": {
-    "express": "^4.21.0",
     "cors": "^2.8.5",
-    "sql.js": "^1.11.0",
+    "express": "^4.21.0",
     "nanoid": "^5.0.7",
     "qrcode": "^1.5.4",
+    "serverless-http": "^4.0.0",
+    "sql.js": "^1.11.0",
     "ua-parser-js": "^1.0.38"
   }
 }

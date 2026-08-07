@@ -1,55 +1,8 @@
-import express from 'express';
-import cors from 'cors';
 import { getDb, closeDb } from './src/models/db.js';
 import config from './src/config/index.js';
+import app from './app.js';
 
-// Route imports
-import urlRoutes from './src/routes/url.routes.js';
-import qrRoutes from './src/routes/qr.routes.js';
-import analyticsRoutes from './src/routes/analytics.routes.js';
-import { redirectToOriginal } from './src/controllers/redirect.controller.js';
-
-const app = express();
-
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    config.clientUrl,
-    // Allow any Vercel preview deployments
-    /\.vercel\.app$/
-  ],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Request logging
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    if (!req.url.includes('/api/')) return;
-    console.log(`${req.method} ${req.url} ${res.statusCode} ${duration}ms`);
-  });
-  next();
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// API Routes (must be before the redirect catch-all)
-app.use('/api', urlRoutes);
-app.use('/api/qr', qrRoutes);
-app.use('/api/analytics', analyticsRoutes);
-
-// Redirect route (catch-all for short codes — MUST be last)
-app.get('/:shortCode', redirectToOriginal);
-
-// Start server
+// Start server (standalone mode)
 async function start() {
   try {
     await getDb();
@@ -67,7 +20,6 @@ async function start() {
   }
 }
 
-// Graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n🛑 Shutting down...');
   closeDb();

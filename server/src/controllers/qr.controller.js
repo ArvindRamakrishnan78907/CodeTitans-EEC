@@ -22,7 +22,7 @@ export async function generateQR(req, res) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    const shortUrl = `${config.baseUrl}/${shortCode}`;
+    const shortUrl = `${config.baseUrl}/r/${shortCode}`;
     const qrOptions = {
       width: parseInt(size),
       margin: 2,
@@ -66,7 +66,7 @@ export async function getQRDataUrl(req, res) {
       return res.status(404).json({ error: 'URL not found' });
     }
 
-    const shortUrl = `${config.baseUrl}/${shortCode}`;
+    const shortUrl = `${config.baseUrl}/r/${shortCode}`;
     const dataUrl = await QRCode.toDataURL(shortUrl, {
       width: parseInt(size),
       margin: 2,

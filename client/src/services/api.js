@@ -1,4 +1,7 @@
+// In production: use VITE_API_URL env var
+// In development: proxy through Vite to localhost:3001
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const REDIRECT_BASE = import.meta.env.VITE_REDIRECT_URL || 'http://localhost:3001';
 
 /**
  * API service for communicating with the URL Shortener backend
@@ -76,6 +79,11 @@ const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     return data;
+  },
+
+  // ── Helpers ─────────────────────────────────────
+  getRedirectUrl(shortCode) {
+    return `${REDIRECT_BASE}/r/${shortCode}`;
   }
 };
 
