@@ -457,44 +457,11 @@ export default function ShortenPage({ addToast }) {
           </div>
         </div>
       </form>
-
-      {/* Result Card */}
-      {result && (
-        <div className="url-result">
-          <div className="url-result-header">
-            <span className="badge badge-success">✨ Created</span>
-            {result.customAlias && <span className="badge badge-primary">Custom Alias</span>}
-          </div>
-
-          <div className="url-result-short">
-            <a href={result.shortUrl} target="_blank" rel="noopener noreferrer">
-              {result.shortUrl}
-            </a>
-            <button
-              className={`btn btn-sm ${copied ? 'btn-success' : 'btn-secondary'}`}
-              onClick={() => handleCopy(result.shortUrl)}
-            >
-              {copied ? '✓ Copied!' : '📋 Copy'}
-            </button>
-          </div>
-
-          <div className="url-result-original">
-            🔗 {result.originalUrl}
-          </div>
-
-          <div className="url-result-actions">
-            {qrData && (
-              <div className="qr-image-container" style={{ display: 'inline-block', padding: '8px', borderRadius: '8px' }}>
-                <img src={qrData} alt="QR Code" style={{ width: '120px', height: '120px' }} />
-              </div>
-            )}
-          </div>
-        </div>
       ) : (
         /* Bulk Mode Form */
         <form onSubmit={handleBulkSubmit} className="card" style={{ marginBottom: 'var(--space-xl)' }}>
           <div className="input-group" style={{ marginBottom: 'var(--space-md)' }}>
-            <label>Paste Multiple URLs (One per line, max 10)</label>
+            <label>Paste multiple URLs (one per line, max 10)</label>
             <textarea
               className="input"
               rows={6}
@@ -514,6 +481,40 @@ export default function ShortenPage({ addToast }) {
             {bulkLoading ? 'Processing...' : 'Shorten all'}
           </button>
         </form>
+      )}
+
+      {/* Result Card */}
+      {result && (
+        <div className="url-result">
+          <div className="url-result-header">
+            <span className="badge badge-success">Created</span>
+            {result.customAlias && <span className="badge badge-primary">Custom Alias</span>}
+          </div>
+
+          <div className="url-result-short">
+            <a href={result.shortUrl} target="_blank" rel="noopener noreferrer">
+              {result.shortUrl}
+            </a>
+            <button
+              className={`btn btn-sm ${copied ? 'btn-success' : 'btn-secondary'}`}
+              onClick={() => handleCopy(result.shortUrl)}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+
+          <div className="url-result-original">
+            {result.originalUrl}
+          </div>
+
+          <div className="url-result-actions">
+            {qrData && (
+              <div className="qr-image-container" style={{ display: 'inline-block', padding: '8px', borderRadius: '8px' }}>
+                <img src={qrData} alt="QR Code" style={{ width: '120px', height: '120px' }} />
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Bulk Results Card */}
