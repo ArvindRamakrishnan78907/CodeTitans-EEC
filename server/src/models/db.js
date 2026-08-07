@@ -62,6 +62,15 @@ export async function getDb() {
     saveDb();
   }
 
+  // Migration for Expiry & Click Limits
+  try {
+    db.exec("SELECT max_clicks FROM urls LIMIT 1");
+  } catch (e) {
+    console.log("Migrating database: adding max_clicks column");
+    db.run("ALTER TABLE urls ADD COLUMN max_clicks INTEGER NULL");
+    saveDb();
+  }
+
   db.run(`
     CREATE TABLE IF NOT EXISTS clicks (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,

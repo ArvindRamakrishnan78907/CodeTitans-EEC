@@ -13,7 +13,7 @@ export async function verifyPassword(req, res) {
     const { password } = req.body;
 
     const url = queryOne(
-      'SELECT id, original_url, password_hash, is_active, expires_at FROM urls WHERE short_code = ?',
+      'SELECT id, original_url, password_hash, is_active, expires_at, max_clicks, click_count FROM urls WHERE short_code = ?',
       [shortCode]
     );
 
@@ -22,7 +22,11 @@ export async function verifyPassword(req, res) {
     }
 
     if (url.expires_at && new Date(url.expires_at) < new Date()) {
-      return res.status(410).json({ error: 'This link has expired' });
+      return res.status(410).json({ error: 'This link has expired by date' });
+    }
+
+    if (url.max_clicks !== null && url.click_count >= url.max_clicks) {
+      return res.status(410).json({ error: 'This link has reached its maximum click limit' });
     }
 
     if (!url.password_hash) {
@@ -62,7 +66,7 @@ export function redirectToOriginal(req, res) {
     const { shortCode } = req.params;
 
     const url = queryOne(
-      'SELECT id, original_url, is_active, expires_at FROM urls WHERE short_code = ?',
+      'SELECT id, original_url, is_active, expires_at, max_clicks, click_count FROM urls WHERE short_code = ?',
       [shortCode]
     );
 
@@ -72,7 +76,11 @@ export function redirectToOriginal(req, res) {
 
     // Check expiration
     if (url.expires_at && new Date(url.expires_at) < new Date()) {
-      return res.status(410).json({ error: 'This link has expired' });
+      return res.status(410).json({ error: 'This link has expired by date' });
+    }
+
+    if (url.max_clicks !== null && url.click_count >= url.max_clicks) {
+      return res.status(410).json({ error: 'This link has reached its maximum click limit' });
     }
 
     // Log click asynchronously

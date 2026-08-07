@@ -8,6 +8,10 @@ export default function ShortenPage({ addToast }) {
   const [useCustomAlias, setUseCustomAlias] = useState(false);
   const [password, setPassword] = useState('');
   const [usePassword, setUsePassword] = useState(false);
+  const [expiresAt, setExpiresAt] = useState('');
+  const [useExpiry, setUseExpiry] = useState(false);
+  const [maxClicks, setMaxClicks] = useState('');
+  const [useMaxClicks, setUseMaxClicks] = useState(false);
   const [aliasStatus, setAliasStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
   const [aliasMessage, setAliasMessage] = useState('');
   const [result, setResult] = useState(null);
@@ -69,10 +73,17 @@ export default function ShortenPage({ addToast }) {
 
     setLoading(true);
     try {
+      let isoExpiry = null;
+      if (useExpiry && expiresAt) {
+        isoExpiry = new Date(expiresAt).toISOString();
+      }
+
       const data = await api.shortenUrl(
         url.trim(), 
         useCustomAlias ? customAlias : null,
-        usePassword ? password : null
+        usePassword ? password : null,
+        isoExpiry,
+        useMaxClicks && maxClicks ? parseInt(maxClicks, 10) : null
       );
       setResult(data);
 
@@ -88,6 +99,8 @@ export default function ShortenPage({ addToast }) {
       setUrl('');
       setCustomAlias('');
       setPassword('');
+      setExpiresAt('');
+      setMaxClicks('');
       loadHistory();
     } catch (error) {
       addToast(error.message, 'error');
@@ -159,9 +172,9 @@ export default function ShortenPage({ addToast }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-xl)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-xl)', flexWrap: 'wrap' }}>
           {/* Custom Alias Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword) ? 'var(--space-md)' : 0 }}>
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
             <input
               type="checkbox"
               className="toggle"
@@ -179,7 +192,7 @@ export default function ShortenPage({ addToast }) {
           </div>
 
           {/* Password Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword) ? 'var(--space-md)' : 0 }}>
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
             <input
               type="checkbox"
               className="toggle"
@@ -194,10 +207,44 @@ export default function ShortenPage({ addToast }) {
             />
             <label htmlFor="password-toggle" className="toggle-label">Password protection</label>
           </div>
+
+          {/* Expiry Toggle */}
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
+            <input
+              type="checkbox"
+              className="toggle"
+              id="expiry-toggle"
+              checked={useExpiry}
+              onChange={(e) => {
+                setUseExpiry(e.target.checked);
+                if (!e.target.checked) {
+                  setExpiresAt('');
+                }
+              }}
+            />
+            <label htmlFor="expiry-toggle" className="toggle-label">Set expiration date</label>
+          </div>
+
+          {/* Max Clicks Toggle */}
+          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
+            <input
+              type="checkbox"
+              className="toggle"
+              id="max-clicks-toggle"
+              checked={useMaxClicks}
+              onChange={(e) => {
+                setUseMaxClicks(e.target.checked);
+                if (!e.target.checked) {
+                  setMaxClicks('');
+                }
+              }}
+            />
+            <label htmlFor="max-clicks-toggle" className="toggle-label">Limit total clicks</label>
+          </div>
         </div>
 
         {/* Advanced Options Inputs */}
-        {(useCustomAlias || usePassword) && (
+        {(useCustomAlias || usePassword || useExpiry || useMaxClicks) && (
           <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap', animation: 'slideUp 0.3s ease' }}>
             
             {useCustomAlias && (
@@ -237,6 +284,37 @@ export default function ShortenPage({ addToast }) {
                   minLength={4}
                 />
                 <span className="helper-text">Requires password to visit</span>
+              </div>
+            )}
+
+            {useExpiry && (
+              <div className="input-group" style={{ flex: '1 1 200px' }}>
+                <label htmlFor="expiry-input">Expiration Date & Time</label>
+                <input
+                  id="expiry-input"
+                  type="datetime-local"
+                  className="input"
+                  value={expiresAt}
+                  min={new Date().toISOString().slice(0, 16)}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                />
+                <span className="helper-text">Link becomes inactive after this</span>
+              </div>
+            )}
+
+            {useMaxClicks && (
+              <div className="input-group" style={{ flex: '1 1 200px' }}>
+                <label htmlFor="max-clicks-input">Maximum Clicks</label>
+                <input
+                  id="max-clicks-input"
+                  type="number"
+                  className="input"
+                  placeholder="e.g. 100"
+                  value={maxClicks}
+                  min={1}
+                  onChange={(e) => setMaxClicks(e.target.value)}
+                />
+                <span className="helper-text">Link expires after N clicks</span>
               </div>
             )}
 

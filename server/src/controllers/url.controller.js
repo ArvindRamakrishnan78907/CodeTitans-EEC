@@ -17,7 +17,7 @@ const generateShortCode = customAlphabet(
  */
 export async function createShortUrl(req, res) {
   try {
-    const { url, customAlias, password } = req.body;
+    const { url, customAlias, password, expiresAt, maxClicks } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -66,9 +66,12 @@ export async function createShortUrl(req, res) {
       passwordHash = await bcrypt.hash(password.trim(), salt);
     }
 
+    const parsedMaxClicks = maxClicks ? parseInt(maxClicks, 10) : null;
+    const finalMaxClicks = parsedMaxClicks > 0 ? parsedMaxClicks : null;
+
     const result = execute(
-      'INSERT INTO urls (short_code, original_url, custom_alias, password_hash) VALUES (?, ?, ?, ?)',
-      [shortCode, url, customAlias ? 1 : 0, passwordHash]
+      'INSERT INTO urls (short_code, original_url, custom_alias, password_hash, expires_at, max_clicks) VALUES (?, ?, ?, ?, ?, ?)',
+      [shortCode, url, customAlias ? 1 : 0, passwordHash, expiresAt || null, finalMaxClicks]
     );
     saveDb();
 
@@ -131,7 +134,7 @@ export function getUrlByCode(req, res) {
     const { shortCode } = req.params;
 
     const url = queryOne(
-      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active, password_hash
+      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active, password_hash, expires_at, max_clicks
        FROM urls WHERE short_code = ? AND is_active = 1`,
       [shortCode]
     );
