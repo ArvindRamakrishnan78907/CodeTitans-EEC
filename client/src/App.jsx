@@ -3,6 +3,7 @@ import { useToast } from './hooks/useToast.js';
 import ShortenPage from './pages/ShortenPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import QRPage from './pages/QRPage.jsx';
+import RedirectHandler from './pages/RedirectHandler.jsx';
 import './index.css';
 
 function App() {
@@ -70,6 +71,7 @@ function App() {
             <Route path="/" element={<ShortenPage addToast={addToast} />} />
             <Route path="/qr" element={<QRPage addToast={addToast} />} />
             <Route path="/analytics" element={<AnalyticsPage addToast={addToast} />} />
+            <Route path="/:shortCode" element={<RedirectHandler />} />
           </Routes>
         </main>
 

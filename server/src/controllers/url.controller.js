@@ -56,7 +56,7 @@ export function createShortUrl(req, res) {
     );
     saveDb();
 
-    const shortUrl = `${config.baseUrl}/r/${shortCode}`;
+    const shortUrl = `${config.clientUrl}/${shortCode}`;
 
     res.status(201).json({
       id: result.lastInsertRowid,
@@ -126,7 +126,7 @@ export function getUrlByCode(req, res) {
 
     res.json({
       ...url,
-      shortUrl: `${config.baseUrl}/r/${url.short_code}`
+      shortUrl: `${config.clientUrl}/${url.short_code}`
     });
   } catch (error) {
     console.error('Error fetching URL:', error);

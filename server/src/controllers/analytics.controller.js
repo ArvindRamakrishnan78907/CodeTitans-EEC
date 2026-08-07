@@ -73,7 +73,7 @@ export function getAnalytics(req, res) {
     );
 
     res.json({
-      url: { ...url, shortUrl: `${config.baseUrl}/r/${url.short_code}` },
+      url: { ...url, shortUrl: `${config.clientUrl}/${url.short_code}` },
       range,
       totalClicks: url.click_count,
       clicksInRange: totalInRange.count,
@@ -117,11 +117,11 @@ export function getDashboardStats(req, res) {
       todayClicks: todayClicks.count,
       recentUrls: recentUrls.map(u => ({
         ...u,
-        shortUrl: `${config.baseUrl}/r/${u.short_code}`
+        shortUrl: `${config.clientUrl}/${u.short_code}`
       })),
       topUrls: topUrls.map(u => ({
         ...u,
-        shortUrl: `${config.baseUrl}/r/${u.short_code}`
+        shortUrl: `${config.clientUrl}/${u.short_code}`
       }))
     });
   } catch (error) {
