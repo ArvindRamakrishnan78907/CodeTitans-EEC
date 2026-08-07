@@ -12,6 +12,10 @@ export default function ShortenPage({ addToast }) {
   const [useExpiry, setUseExpiry] = useState(false);
   const [maxClicks, setMaxClicks] = useState('');
   const [useMaxClicks, setUseMaxClicks] = useState(false);
+  const [utmSource, setUtmSource] = useState('');
+  const [utmMedium, setUtmMedium] = useState('');
+  const [utmCampaign, setUtmCampaign] = useState('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [aliasStatus, setAliasStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
   const [aliasMessage, setAliasMessage] = useState('');
   const [result, setResult] = useState(null);
@@ -78,8 +82,21 @@ export default function ShortenPage({ addToast }) {
         isoExpiry = new Date(expiresAt).toISOString();
       }
 
+      let finalUrl = url.trim();
+      if (utmSource || utmMedium || utmCampaign) {
+        try {
+          const urlObj = new URL(finalUrl.includes('://') ? finalUrl : `http://${finalUrl}`);
+          if (utmSource) urlObj.searchParams.set('utm_source', utmSource.trim());
+          if (utmMedium) urlObj.searchParams.set('utm_medium', utmMedium.trim());
+          if (utmCampaign) urlObj.searchParams.set('utm_campaign', utmCampaign.trim());
+          finalUrl = urlObj.toString();
+        } catch (e) {
+          // Ignore invalid URL here
+        }
+      }
+
       const data = await api.shortenUrl(
-        url.trim(), 
+        finalUrl, 
         useCustomAlias ? customAlias : null,
         usePassword ? password : null,
         isoExpiry,
@@ -101,6 +118,10 @@ export default function ShortenPage({ addToast }) {
       setPassword('');
       setExpiresAt('');
       setMaxClicks('');
+      setUtmSource('');
+      setUtmMedium('');
+      setUtmCampaign('');
+      setIsAdvancedOpen(false);
       loadHistory();
     } catch (error) {
       addToast(error.message, 'error');
@@ -172,154 +193,188 @@ export default function ShortenPage({ addToast }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-xl)', flexWrap: 'wrap' }}>
-          {/* Custom Alias Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
-            <input
-              type="checkbox"
-              className="toggle"
-              id="custom-alias-toggle"
-              checked={useCustomAlias}
-              onChange={(e) => {
-                setUseCustomAlias(e.target.checked);
-                if (!e.target.checked) {
-                  setCustomAlias('');
-                  setAliasStatus(null);
-                }
-              }}
-            />
-            <label htmlFor="custom-alias-toggle" className="toggle-label">Use custom alias</label>
-          </div>
-
-          {/* Password Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
-            <input
-              type="checkbox"
-              className="toggle"
-              id="password-toggle"
-              checked={usePassword}
-              onChange={(e) => {
-                setUsePassword(e.target.checked);
-                if (!e.target.checked) {
-                  setPassword('');
-                }
-              }}
-            />
-            <label htmlFor="password-toggle" className="toggle-label">Password protection</label>
-          </div>
-
-          {/* Expiry Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
-            <input
-              type="checkbox"
-              className="toggle"
-              id="expiry-toggle"
-              checked={useExpiry}
-              onChange={(e) => {
-                setUseExpiry(e.target.checked);
-                if (!e.target.checked) {
-                  setExpiresAt('');
-                }
-              }}
-            />
-            <label htmlFor="expiry-toggle" className="toggle-label">Set expiration date</label>
-          </div>
-
-          {/* Max Clicks Toggle */}
-          <div className="toggle-container" style={{ marginBottom: (useCustomAlias || usePassword || useExpiry || useMaxClicks) ? 'var(--space-md)' : 0 }}>
-            <input
-              type="checkbox"
-              className="toggle"
-              id="max-clicks-toggle"
-              checked={useMaxClicks}
-              onChange={(e) => {
-                setUseMaxClicks(e.target.checked);
-                if (!e.target.checked) {
-                  setMaxClicks('');
-                }
-              }}
-            />
-            <label htmlFor="max-clicks-toggle" className="toggle-label">Limit total clicks</label>
-          </div>
+        {/* Advanced Options Accordion */}
+        <div 
+          className="accordion-header" 
+          onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+        >
+          <span className={`accordion-icon ${isAdvancedOpen ? 'open' : ''}`}>▶</span>
+          Advanced Options & Customizations
         </div>
 
-        {/* Advanced Options Inputs */}
-        {(useCustomAlias || usePassword || useExpiry || useMaxClicks) && (
-          <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap', animation: 'slideUp 0.3s ease' }}>
+        <div className={`accordion-content ${isAdvancedOpen ? 'open' : ''}`}>
+          <div className="advanced-grid">
             
-            {useCustomAlias && (
-              <div className="input-group" style={{ flex: '1 1 200px' }}>
-                <label htmlFor="alias-input">Custom Alias</label>
+            {/* Toggles Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+              <div className="toggle-container">
                 <input
-                  id="alias-input"
+                  type="checkbox"
+                  className="toggle"
+                  id="custom-alias-toggle"
+                  checked={useCustomAlias}
+                  onChange={(e) => {
+                    setUseCustomAlias(e.target.checked);
+                    if (!e.target.checked) {
+                      setCustomAlias('');
+                      setAliasStatus(null);
+                    }
+                  }}
+                />
+                <label htmlFor="custom-alias-toggle" className="toggle-label">Use custom alias</label>
+              </div>
+
+              <div className="toggle-container">
+                <input
+                  type="checkbox"
+                  className="toggle"
+                  id="password-toggle"
+                  checked={usePassword}
+                  onChange={(e) => {
+                    setUsePassword(e.target.checked);
+                    if (!e.target.checked) setPassword('');
+                  }}
+                />
+                <label htmlFor="password-toggle" className="toggle-label">Password protection</label>
+              </div>
+
+              <div className="toggle-container">
+                <input
+                  type="checkbox"
+                  className="toggle"
+                  id="expiry-toggle"
+                  checked={useExpiry}
+                  onChange={(e) => {
+                    setUseExpiry(e.target.checked);
+                    if (!e.target.checked) setExpiresAt('');
+                  }}
+                />
+                <label htmlFor="expiry-toggle" className="toggle-label">Set expiration date</label>
+              </div>
+
+              <div className="toggle-container">
+                <input
+                  type="checkbox"
+                  className="toggle"
+                  id="max-clicks-toggle"
+                  checked={useMaxClicks}
+                  onChange={(e) => {
+                    setUseMaxClicks(e.target.checked);
+                    if (!e.target.checked) setMaxClicks('');
+                  }}
+                />
+                <label htmlFor="max-clicks-toggle" className="toggle-label">Limit total clicks</label>
+              </div>
+            </div>
+
+            {/* Inputs Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+              {useCustomAlias && (
+                <div className="input-group">
+                  <label htmlFor="alias-input">Custom Alias</label>
+                  <input
+                    id="alias-input"
+                    type="text"
+                    className={`input ${
+                      aliasStatus === 'available' ? 'input-success' :
+                      aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
+                    }`}
+                    placeholder="my-custom-alias"
+                    value={customAlias}
+                    onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    maxLength={30}
+                  />
+                  {aliasStatus === 'checking' && <span className="helper-text">Checking availability...</span>}
+                  {aliasStatus === 'available' && <span className="success-text">{aliasMessage}</span>}
+                  {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">{aliasMessage}</span>}
+                  {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
+                    <span className="helper-text">Minimum 3 characters</span>
+                  )}
+                </div>
+              )}
+
+              {usePassword && (
+                <div className="input-group">
+                  <label htmlFor="password-input">Password</label>
+                  <input
+                    id="password-input"
+                    type="password"
+                    className="input"
+                    placeholder="Enter a secure password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={4}
+                  />
+                  <span className="helper-text">Requires password to visit</span>
+                </div>
+              )}
+
+              {useExpiry && (
+                <div className="input-group">
+                  <label htmlFor="expiry-input">Expiration Date & Time</label>
+                  <input
+                    id="expiry-input"
+                    type="datetime-local"
+                    className="input"
+                    value={expiresAt}
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {useMaxClicks && (
+                <div className="input-group">
+                  <label htmlFor="max-clicks-input">Maximum Clicks</label>
+                  <input
+                    id="max-clicks-input"
+                    type="number"
+                    className="input"
+                    placeholder="e.g. 100"
+                    value={maxClicks}
+                    min={1}
+                    onChange={(e) => setMaxClicks(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+            
+            {/* UTM Builder Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+              <div className="input-group">
+                <label>UTM Campaign (optional)</label>
+                <input
                   type="text"
-                  className={`input ${
-                    aliasStatus === 'available' ? 'input-success' :
-                    aliasStatus === 'taken' || aliasStatus === 'invalid' ? 'input-error' : ''
-                  }`}
-                  placeholder="my-custom-alias"
-                  value={customAlias}
-                  onChange={(e) => setCustomAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  maxLength={30}
-                />
-                {aliasStatus === 'checking' && <span className="helper-text">Checking availability...</span>}
-                {aliasStatus === 'available' && <span className="success-text">{aliasMessage}</span>}
-                {(aliasStatus === 'taken' || aliasStatus === 'invalid') && <span className="error-text">{aliasMessage}</span>}
-                {!aliasStatus && customAlias.length > 0 && customAlias.length < 3 && (
-                  <span className="helper-text">Minimum 3 characters</span>
-                )}
-              </div>
-            )}
-
-            {usePassword && (
-              <div className="input-group" style={{ flex: '1 1 200px' }}>
-                <label htmlFor="password-input">Password</label>
-                <input
-                  id="password-input"
-                  type="password"
                   className="input"
-                  placeholder="Enter a secure password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={4}
+                  placeholder="e.g. summer_sale"
+                  value={utmCampaign}
+                  onChange={(e) => setUtmCampaign(e.target.value)}
                 />
-                <span className="helper-text">Requires password to visit</span>
               </div>
-            )}
-
-            {useExpiry && (
-              <div className="input-group" style={{ flex: '1 1 200px' }}>
-                <label htmlFor="expiry-input">Expiration Date & Time</label>
+              <div className="input-group">
+                <label>UTM Source (optional)</label>
                 <input
-                  id="expiry-input"
-                  type="datetime-local"
+                  type="text"
                   className="input"
-                  value={expiresAt}
-                  min={new Date().toISOString().slice(0, 16)}
-                  onChange={(e) => setExpiresAt(e.target.value)}
+                  placeholder="e.g. twitter, newsletter"
+                  value={utmSource}
+                  onChange={(e) => setUtmSource(e.target.value)}
                 />
-                <span className="helper-text">Link becomes inactive after this</span>
               </div>
-            )}
-
-            {useMaxClicks && (
-              <div className="input-group" style={{ flex: '1 1 200px' }}>
-                <label htmlFor="max-clicks-input">Maximum Clicks</label>
+              <div className="input-group">
+                <label>UTM Medium (optional)</label>
                 <input
-                  id="max-clicks-input"
-                  type="number"
+                  type="text"
                   className="input"
-                  placeholder="e.g. 100"
-                  value={maxClicks}
-                  min={1}
-                  onChange={(e) => setMaxClicks(e.target.value)}
+                  placeholder="e.g. social, email"
+                  value={utmMedium}
+                  onChange={(e) => setUtmMedium(e.target.value)}
                 />
-                <span className="helper-text">Link expires after N clicks</span>
               </div>
-            )}
+            </div>
 
           </div>
-        )}
+        </div>
       </form>
 
       {/* Result Card */}
