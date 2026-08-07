@@ -8,16 +8,21 @@ export default function QRPage({ addToast }) {
   const [loadingUrls, setLoadingUrls] = useState(true);
 
   useEffect(() => {
-    loadUrls();
+    const params = new URLSearchParams(window.location.search);
+    const codeParam = params.get('code');
+    loadUrls(codeParam);
   }, []);
 
-  const loadUrls = async () => {
+  const loadUrls = async (initialCode) => {
     setLoadingUrls(true);
     try {
       const data = await api.getAllUrls(1, 50);
       const list = data.urls || [];
       setUrls(list);
-      if (list.length > 0) {
+      
+      if (initialCode && list.some(u => u.short_code === initialCode)) {
+        setSelectedCode(initialCode);
+      } else if (list.length > 0) {
         setSelectedCode(list[0].short_code);
       }
     } catch (e) {

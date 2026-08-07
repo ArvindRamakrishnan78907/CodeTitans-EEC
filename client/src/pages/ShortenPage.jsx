@@ -529,7 +529,7 @@ export default function ShortenPage({ addToast }) {
                 <img 
                   src={qrData} 
                   alt="QR Code" 
-                  onClick={() => navigate('/qr')} 
+                  onClick={() => navigate(`/qr?code=${result.shortCode}`)} 
                   title="Click to customize QR code" 
                   style={{ width: '48px', height: '48px', borderRadius: '6px', cursor: 'pointer', background: '#fff', padding: '2px', flexShrink: 0 }} 
                 />
