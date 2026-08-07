@@ -2,6 +2,12 @@ import QRCode from 'qrcode';
 import config from '../config/index.js';
 import { queryOne } from '../models/db.js';
 
+function ensureProtocol(u) {
+  if (!u) return '';
+  const trimmed = u.trim();
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
 /**
  * Generate QR code image (PNG/SVG) for a short URL
  */
@@ -26,7 +32,11 @@ export async function generateQR(req, res) {
 
     const baseUrl = clientUrl || config.clientUrl;
     const shortUrl = `${baseUrl}/${shortCode}`;
-    const encodedUrl = targetMode === 'short' ? shortUrl : url.original_url;
+    const destinationUrl = ensureProtocol(url.original_url);
+
+    // If targetMode is 'short' but shortUrl is localhost, fallback to direct destination to ensure phone cameras can scan it
+    const isLocalhost = shortUrl.includes('localhost') || shortUrl.includes('127.0.0.1');
+    const encodedUrl = (targetMode === 'short' && !isLocalhost) ? shortUrl : destinationUrl;
 
     const qrOptions = {
       width: Math.min(Math.max(parseInt(size) || 300, 100), 1000),
@@ -76,7 +86,11 @@ export async function getQRDataUrl(req, res) {
 
     const baseUrl = clientUrl || config.clientUrl;
     const shortUrl = `${baseUrl}/${shortCode}`;
-    const encodedUrl = targetMode === 'short' ? shortUrl : url.original_url;
+    const destinationUrl = ensureProtocol(url.original_url);
+
+    // If targetMode is 'short' but shortUrl is localhost, fallback to direct destination to ensure phone cameras can scan it
+    const isLocalhost = shortUrl.includes('localhost') || shortUrl.includes('127.0.0.1');
+    const encodedUrl = (targetMode === 'short' && !isLocalhost) ? shortUrl : destinationUrl;
 
     const qrSize = Math.min(Math.max(parseInt(size) || 300, 100), 1000);
     const dataUrl = await QRCode.toDataURL(encodedUrl, {
@@ -90,19 +104,17 @@ export async function getQRDataUrl(req, res) {
     });
 
     res.json({
-      qrCode: dataUrl,
-      encodedUrl,
+      shortCode,
       shortUrl,
       originalUrl: url.original_url,
-      shortCode,
+      encodedUrl,
+      qrCode: dataUrl,
       targetMode,
-      createdAt: url.created_at,
-      customAlias: url.custom_alias ? url.short_code : null,
       size: qrSize,
-      errorCorrection: 'H'
+      createdAt: url.created_at
     });
   } catch (error) {
     console.error('Error generating QR data URL:', error);
-    res.status(500).json({ error: 'Failed to generate QR code' });
+    res.status(500).json({ error: 'Failed to generate QR data URL' });
   }
 }
