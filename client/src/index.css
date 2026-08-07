@@ -1,27 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #FAFAFA;
-  --bg-tertiary: #F5F5F5;
-  --bg-card: #FFFFFF;
+  --bg-primary: #050505;
+  --bg-secondary: #050505;
+  --bg-tertiary: rgba(255, 255, 255, 0.05);
+  --bg-card: rgba(25, 25, 25, 0.4);
 
-  --accent-primary: #000000;
-  --accent-primary-hover: #333333;
-  --accent-secondary: #EAEAEA;
-  --accent-secondary-hover: #D4D4D4;
+  --accent-primary: #ffffff;
+  --accent-primary-hover: #cccccc;
+  --accent-secondary: rgba(255, 255, 255, 0.08);
+  --accent-secondary-hover: rgba(255, 255, 255, 0.15);
   
-  --accent-success: #0070F3;
-  --accent-error: #E00;
+  --accent-success: #32d74b;
+  --accent-error: #ff453a;
 
-  --text-primary: #111111;
-  --text-secondary: #666666;
-  --text-tertiary: #888888;
-  --text-inverse: #FFFFFF;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-inverse: #000000;
 
-  --border-subtle: #EAEAEA;
-  --border-default: #EAEAEA;
-  --border-strong: #333333;
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-hover: rgba(255, 255, 255, 0.3);
 
   --space-xs: 4px;
   --space-sm: 8px;
@@ -31,21 +32,21 @@
   --space-2xl: 48px;
   --space-3xl: 64px;
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.3);
 
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
-  --transition-fast: 150ms ease;
-  --transition-base: 250ms ease;
+  --transition-fast: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -63,9 +64,14 @@ html {
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(88, 28, 237, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(225, 20, 140, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(20, 175, 225, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.6;
   min-height: 100vh;
 }
 
@@ -81,8 +87,10 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 240px;
-  background: var(--bg-primary);
+  width: 260px;
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-right: 1px solid var(--border-default);
   padding: var(--space-xl) var(--space-lg);
   display: flex;
@@ -139,7 +147,7 @@ body {
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 260px;
   padding: var(--space-3xl);
   max-width: 1000px;
 }
@@ -162,12 +170,20 @@ body {
 
 /* Cards */
 .card {
-  background: var(--bg-primary);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   box-shadow: var(--shadow-sm);
   margin-bottom: var(--space-xl);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Forms */
@@ -185,19 +201,20 @@ body {
 
 .input {
   width: 100%;
-  padding: 10px 12px;
-  background: var(--bg-primary);
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .input:focus {
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .input::placeholder {
@@ -225,15 +242,19 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  padding: 10px 16px;
+  padding: 12px 20px;
   border-radius: var(--radius-md);
   font-family: var(--font-family);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
   border: none;
   transition: all var(--transition-fast);
   text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -346,7 +367,9 @@ body {
 }
 
 .toast {
-  background: var(--bg-primary);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   padding: 12px 16px;
@@ -380,10 +403,18 @@ body {
 }
 
 .stat-card {
-  background: var(--bg-primary);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
   padding: var(--space-lg);
   border-radius: var(--radius-lg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-card h3 {
@@ -439,10 +470,17 @@ body {
   justify-content: center;
   padding: var(--space-2xl) var(--space-xl);
   text-align: center;
-  background: var(--bg-surface);
-  border: 1px dashed var(--border-default);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px dashed var(--border-hover);
   border-radius: var(--radius-lg);
   margin-top: var(--space-md);
+  transition: transform var(--transition-fast);
+}
+
+.empty-state:hover {
+  transform: translateY(-2px);
 }
 
 .empty-state-icon {
@@ -513,15 +551,18 @@ body {
 
 .config-card {
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--space-md);
-  background: var(--bg-surface);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .config-card:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .config-header {
