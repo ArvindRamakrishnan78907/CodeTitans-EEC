@@ -1,0 +1,20 @@
+{
+  "name": "url-shortener-server",
+  "version": "1.0.0",
+  "description": "Mission Alpha — URL Shortener Backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "db:init": "node database/init.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "sql.js": "^1.11.0",
+    "nanoid": "^5.0.7",
+    "qrcode": "^1.5.4",
+    "ua-parser-js": "^1.0.38"
+  }
+}
