@@ -78,6 +78,13 @@ export function getAnalytics(req, res) {
       [url.id]
     );
 
+    const countries = queryAll(
+      `SELECT country, COUNT(*) as count
+       FROM clicks WHERE url_id = ? AND clicked_at >= ?
+       GROUP BY country ORDER BY count DESC LIMIT 10`,
+      [url.id, sinceDateStr]
+    );
+
     res.json({
       url: { ...url, shortUrl: `${config.clientUrl}/${url.short_code}` },
       range,
@@ -89,7 +96,8 @@ export function getAnalytics(req, res) {
       browsers,
       operatingSystems,
       devices,
-      recentClicks
+      recentClicks,
+      countries
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);

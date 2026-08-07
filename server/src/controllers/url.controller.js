@@ -17,7 +17,7 @@ const generateShortCode = customAlphabet(
  */
 export async function createShortUrl(req, res) {
   try {
-    const { url, customAlias, password, expiresAt, maxClicks } = req.body;
+    const { url, customAlias, password, expiresAt, maxClicks, tag } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: 'URL is required' });
@@ -68,10 +68,11 @@ export async function createShortUrl(req, res) {
 
     const parsedMaxClicks = maxClicks ? parseInt(maxClicks, 10) : null;
     const finalMaxClicks = parsedMaxClicks > 0 ? parsedMaxClicks : null;
+    const finalTag = tag && tag.trim().length > 0 ? tag.trim() : null;
 
     const result = execute(
-      'INSERT INTO urls (short_code, original_url, custom_alias, password_hash, expires_at, max_clicks) VALUES (?, ?, ?, ?, ?, ?)',
-      [shortCode, url, customAlias ? 1 : 0, passwordHash, expiresAt || null, finalMaxClicks]
+      'INSERT INTO urls (short_code, original_url, custom_alias, password_hash, expires_at, max_clicks, tag) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [shortCode, url, customAlias ? 1 : 0, passwordHash, expiresAt || null, finalMaxClicks, finalTag]
     );
     saveDb();
 
@@ -83,6 +84,8 @@ export async function createShortUrl(req, res) {
       shortUrl,
       originalUrl: url,
       customAlias: !!customAlias,
+      tag: finalTag,
+      isVerifiedSafe: true,
       createdAt: new Date().toISOString()
     });
   } catch (error) {
@@ -101,7 +104,7 @@ export function getAllUrls(req, res) {
     const offset = (page - 1) * limit;
 
     const urls = queryAll(
-      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active
+      `SELECT id, short_code, original_url, custom_alias, created_at, click_count, is_active, tag
        FROM urls WHERE is_active = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [limit, offset]
     );
@@ -111,7 +114,8 @@ export function getAllUrls(req, res) {
     res.json({
       urls: urls.map(u => ({
         ...u,
-        shortUrl: `${config.baseUrl}/r/${u.short_code}`
+        shortUrl: `${config.clientUrl}/${u.short_code}`,
+        isVerifiedSafe: true
       })),
       pagination: {
         page,

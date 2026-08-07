@@ -71,6 +71,15 @@ export async function getDb() {
     saveDb();
   }
 
+  // Migration for Category Tag
+  try {
+    db.exec("SELECT tag FROM urls LIMIT 1");
+  } catch (e) {
+    console.log("Migrating database: adding tag column");
+    db.run("ALTER TABLE urls ADD COLUMN tag TEXT NULL");
+    saveDb();
+  }
+
   db.run(`
     CREATE TABLE IF NOT EXISTS clicks (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,

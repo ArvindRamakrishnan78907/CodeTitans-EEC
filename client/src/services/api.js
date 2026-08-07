@@ -13,12 +13,13 @@ function formatShortUrl(shortCode) {
  */
 const api = {
   // ── URL Shortening ──────────────────────────────
-  async shortenUrl(url, customAlias = null, password = null, expiresAt = null, maxClicks = null) {
+  async shortenUrl(url, customAlias = null, password = null, expiresAt = null, maxClicks = null, tag = null) {
     const body = { url };
     if (customAlias) body.customAlias = customAlias;
     if (password) body.password = password;
     if (expiresAt) body.expiresAt = expiresAt;
     if (maxClicks) body.maxClicks = maxClicks;
+    if (tag) body.tag = tag;
 
     const res = await fetch(`${API_BASE}/shorten`, {
       method: 'POST',

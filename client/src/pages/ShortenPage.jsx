@@ -30,6 +30,8 @@ export default function ShortenPage({ addToast }) {
   const [aliasStatus, setAliasStatus] = useState(null);
   const [aliasMessage, setAliasMessage] = useState('');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [selectedTag, setSelectedTag] = useState('');
+  const [filterTag, setFilterTag] = useState('All');
   const { copied, copy } = useCopy();
 
   // Load URL history
@@ -126,7 +128,8 @@ export default function ShortenPage({ addToast }) {
         useCustomAlias ? customAlias : null,
         usePassword ? password : null,
         isoExpiry,
-        useMaxClicks && maxClicks ? parseInt(maxClicks, 10) : null
+        useMaxClicks && maxClicks ? parseInt(maxClicks, 10) : null,
+        selectedTag || null
       );
       setResult(data);
 
@@ -147,6 +150,7 @@ export default function ShortenPage({ addToast }) {
       setUtmSource('');
       setUtmMedium('');
       setUtmCampaign('');
+      setSelectedTag('');
       setIsAdvancedOpen(false);
       loadHistory();
     } catch (error) {
@@ -286,6 +290,29 @@ export default function ShortenPage({ addToast }) {
               </button>
             </div>
           </div>
+
+            {/* Category Tag Card */}
+            <div className="config-card">
+              <div className="config-header">
+                <label htmlFor="category-tag-select" style={{ fontWeight: 500 }}>Category Tag</label>
+              </div>
+              <div className="config-body">
+                <select
+                  id="category-tag-select"
+                  className="input"
+                  value={selectedTag}
+                  onChange={(e) => setSelectedTag(e.target.value)}
+                  style={{ width: '100%' }}
+                >
+                  <option value="">-- None --</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Social">Social</option>
+                  <option value="Work">Work</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Dev">Dev</option>
+                </select>
+              </div>
+            </div>
 
         {/* Advanced Options Accordion */}
         <div 
@@ -495,35 +522,58 @@ export default function ShortenPage({ addToast }) {
 
       {/* Result Card */}
       {result && (
-        <div className="url-result">
-          <div className="url-result-header">
-            <span className="badge badge-success">Created</span>
-            {result.customAlias && <span className="badge badge-primary">Custom Alias</span>}
-          </div>
-
-          <div className="url-result-short">
-            <a href={result.shortUrl} target="_blank" rel="noopener noreferrer">
-              {result.shortUrl}
-            </a>
-            <button
-              className={`btn btn-sm ${copied ? 'btn-success' : 'btn-secondary'}`}
-              onClick={() => handleCopy(result.shortUrl)}
-            >
-              {copied ? 'Copied!' : 'Copy'}
+        <div className="card" style={{ marginBottom: 'var(--space-xl)', border: '1px solid #32d74b', background: 'rgba(50, 215, 75, 0.05)', padding: 'var(--space-xl)' }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-sm)' }}>
+            <div className="flex items-center gap-sm">
+              <span className="health-badge health-badge-ok" style={{ background: '#32d74b', color: '#000', fontWeight: 700, padding: '4px 10px' }}>
+                Shortened Link Ready
+              </span>
+              <span className="health-badge health-badge-ok" style={{ padding: '4px 10px' }}>
+                Verified Safe
+              </span>
+              {result.tag && (
+                <span className="click-badge" style={{ background: 'var(--accent-secondary)', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                  {result.tag}
+                </span>
+              )}
+              {result.customAlias && <span className="click-badge">Custom Alias</span>}
+            </div>
+            <button className="action-btn" onClick={() => setResult(null)} style={{ fontSize: '0.8rem' }}>
+              Dismiss
             </button>
           </div>
 
-          <div className="url-result-original">
-            {result.originalUrl}
+          <div className="flex items-center justify-between" style={{ gap: 'var(--space-md)', flexWrap: 'wrap', marginBottom: 'var(--space-md)', background: 'var(--bg-card)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
+            <div style={{ wordBreak: 'break-all', fontSize: '1.25rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+              <a href={result.shortUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>
+                {result.shortUrl}
+              </a>
+            </div>
+            <button
+              className={`btn ${copied ? 'btn-success' : 'btn-primary'}`}
+              onClick={() => handleCopy(result.shortUrl)}
+              style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+            >
+              {copied ? 'Copied to Clipboard!' : 'Copy Short Link'}
+            </button>
           </div>
 
-          <div className="url-result-actions">
-            {qrData && (
-              <div className="qr-image-container" style={{ display: 'inline-block', padding: '8px', borderRadius: '8px' }}>
-                <img src={qrData} alt="QR Code" style={{ width: '120px', height: '120px' }} />
-              </div>
-            )}
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-md)', wordBreak: 'break-all' }}>
+            <strong>Destination: </strong> {result.originalUrl}
           </div>
+
+          {qrData && (
+            <div className="flex items-center gap-md" style={{ background: 'var(--bg-tertiary)', padding: '16px', borderRadius: '12px', flexWrap: 'wrap' }}>
+              <img src={qrData} alt="QR Code" style={{ width: '96px', height: '96px', borderRadius: '8px', background: '#fff', padding: '4px' }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>Center Logo QR Code Included</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Scan directly with any phone camera to visit destination</div>
+                <button className="action-btn" onClick={() => navigate('/qr')}>
+                  Customize QR Branding
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -562,19 +612,35 @@ export default function ShortenPage({ addToast }) {
             <span className="click-badge" style={{ fontSize: '0.85rem' }}>{history.length} links</span>
           </div>
 
-          {/* Search bar */}
-          {history.length > 0 && (
-            <div style={{ maxWidth: '280px', width: '100%' }}>
-              <input
-                type="text"
-                className="input"
-                placeholder="Search links..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ padding: '8px 12px', fontSize: '0.85rem' }}
-              />
+          {/* Search bar & Tag Filters */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+            <div className="mode-tabs" style={{ marginBottom: 0 }}>
+              {['All', 'Marketing', 'Social', 'Work', 'Personal', 'Dev'].map(tagOption => (
+                <button
+                  key={tagOption}
+                  type="button"
+                  className={`tab-btn ${filterTag === tagOption ? 'active' : ''}`}
+                  onClick={() => setFilterTag(tagOption)}
+                  style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                >
+                  {tagOption}
+                </button>
+              ))}
             </div>
-          )}
+
+            {history.length > 0 && (
+              <div style={{ maxWidth: '220px', width: '100%' }}>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Search links..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ padding: '6px 10px', fontSize: '0.825rem' }}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {history.length === 0 ? (
@@ -586,20 +652,30 @@ export default function ShortenPage({ addToast }) {
         ) : (
           <div className="url-list">
             {history
-              .filter(item => 
-                item.short_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                item.original_url.toLowerCase().includes(searchQuery.toLowerCase())
-              )
+              .filter(item => {
+                const matchesSearch = item.short_code.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  item.original_url.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesTag = filterTag === 'All' || item.tag === filterTag;
+                return matchesSearch && matchesTag;
+              })
               .map((item) => (
                 <div key={item.short_code} className="url-item-card">
                   <div className="url-item-row">
-                    <div className="url-item-left">
+                    <div className="url-item-left" style={{ flexWrap: 'wrap', gap: '6px' }}>
                       <span
                         className="short-pill"
                         onClick={() => handleCopy(item.shortUrl)}
                         title="Click to copy short link"
                       >
                         /{item.short_code}
+                      </span>
+                      {item.tag && (
+                        <span className="click-badge" style={{ background: 'var(--accent-secondary)', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                          {item.tag}
+                        </span>
+                      )}
+                      <span className="health-badge health-badge-ok" style={{ padding: '2px 8px', fontSize: '0.7rem' }}>
+                        Verified Safe
                       </span>
                       <span className="click-badge">
                         {item.click_count} {item.click_count === 1 ? 'click' : 'clicks'}

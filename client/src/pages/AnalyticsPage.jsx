@@ -432,6 +432,35 @@ export default function AnalyticsPage({ addToast }) {
             </div>
           )}
 
+          {/* Geolocation Country Breakdown */}
+          <div className="chart-container" style={{ padding: 'var(--space-xl)', marginBottom: 'var(--space-lg)' }}>
+            <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
+              <span className="chart-title" style={{ fontSize: '1rem', fontWeight: 600 }}>Geolocation & Country Traffic</span>
+            </div>
+            {analytics?.countries && analytics.countries.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-md)' }}>
+                {analytics.countries.map((c) => {
+                  const maxCount = Math.max(...analytics.countries.map(item => item.count), 1);
+                  const percentage = Math.round((c.count / maxCount) * 100);
+                  const countryName = c.country || 'Unknown / Local Direct';
+                  return (
+                    <div key={countryName} style={{ background: 'var(--bg-tertiary)', padding: '14px 18px', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
+                      <div className="flex items-center justify-between" style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '6px' }}>
+                        <span>{countryName}</span>
+                        <span style={{ color: 'var(--accent-primary)' }}>{c.count} {c.count === 1 ? 'click' : 'clicks'}</span>
+                      </div>
+                      <div className="progress-container">
+                        <div className="progress-fill" style={{ width: `${percentage}%`, background: '#22d3ee' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state"><p>No location data recorded yet</p></div>
+            )}
+          </div>
+
           {/* Top Referrers Bar Distribution */}
           <div className="chart-container" style={{ padding: 'var(--space-xl)' }}>
             <div className="chart-header" style={{ marginBottom: 'var(--space-lg)' }}>
